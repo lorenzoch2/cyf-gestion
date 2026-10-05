@@ -31,7 +31,8 @@ src/
     sesion.tsx          # contexto de sesión (entrar / salir)
     datos.ts            # una función por consulta + el hook useConsulta
     tipos.ts            # filas de la base y etiquetas para mostrar
-    formato.ts          # pesos, fechas, enlaces de teléfono y mapa
+    formato.ts          # pesos, fechas, distancias, enlaces de teléfono y mapa
+    ruteo.ts            # el recorrido trazado por las calles (Valhalla/OSM)
     pdf.ts              # el presupuesto en PDF, compuesto en el navegador
   componentes/          # ui.tsx (piezas), Navegacion.tsx, iconos.tsx
   paginas/              # una por pantalla
@@ -72,6 +73,17 @@ src/
   más avanzado que contiene —`PESO_ESTADO`— y porque los puntos sueltos se dibujan en canvas,
   que aguanta 333 sin pestañear. Con un recorrido planificado no se agrupa: ahí importa ver
   cada parada con su número.
+- **El recorrido se traza por las calles, a pie.** `ruteo.ts` se lo pregunta a Valhalla en la
+  instancia pública de OpenStreetMap: sin llave ni tarjeta, y con perfil `pedestrian` porque la
+  prospección se hace caminando —el perfil de auto haría dar tres cuadras de vuelta para cruzar
+  a la vereda de enfrente de Irarrázaval—. El servidor acepta diez paradas por consulta, así que
+  un recorrido largo se pide por trozos que se solapan en la parada del borde.
+- **Si el ruteador no contesta, vuelve la línea recta punteada** y la hoja lo dice con todas sus
+  letras. Medir el camino es una ayuda para planificar el día, no un requisito para salir a la
+  calle: la app tiene que servir igual con mala señal.
+- **Se traza y se mide el tramo de una jornada: `MAX_TRAZADO` paradas.** Las mismas que el mapa
+  numera y que la hoja lista. Ordenar 150 locales sirve para saber por dónde seguir; trazarlos
+  todos sería pedirle al servidor —y al teléfono— un recorrido que nadie va a caminar.
 - **El color del estado de gestión es uno solo** y vive en `ESTADOS_PROSPECTO` (`tipos.ts`):
   el mismo en la lista, en la ficha y —cuando llegue— en el mapa.
 - **Latón para la acción, acero para la estructura.** El botón de latón lleva texto grafito, nunca

@@ -11,7 +11,8 @@ import { IconoVolver } from '../componentes/iconos'
 import {
   asignarRuta, consultarProspectos, consultarRutas, crearRuta, useConsulta,
 } from '../lib/datos'
-import { enlaceMapa, hoyIso, plural } from '../lib/formato'
+import { duracion, enlaceMapa, hoyIso, kilometros, plural } from '../lib/formato'
+import { MAX_TRAZADO, trazarRecorrido, type Trazado } from '../lib/ruteo'
 import {
   COLOR_ESTADO, ESTADOS_PROSPECTO, ORDEN_ESTADOS, ZONAS,
   type EstadoProspecto, type Prospecto, type Ruta,
@@ -220,7 +221,7 @@ function Pines({
         )
       })}
 
-      {recorrido?.slice(0, 20).map((p, i) => (
+      {recorrido?.slice(0, MAX_TRAZADO).map((p, i) => (
         <Marker
           key={'parada-' + p.id}
           position={[p.lat!, p.lng!]}
@@ -244,6 +245,8 @@ export function Mapa() {
   const [estados, setEstados] = useState<EstadoProspecto[]>([])
   const [ruta, setRuta] = useState(parametros.get('ruta') ?? '')
   const [recorrido, setRecorrido] = useState<Prospecto[] | null>(null)
+  const [trazado, setTrazado] = useState<Trazado | null>(null)
+  const [trazando, setTrazando] = useState(false)
   const [registrando, setRegistrando] = useState<Prospecto | null>(null)
   const [aviso, setAviso] = useState<Deshacer | null>(null)
   const [hoja, setHoja] = useState<'planificar' | 'guardar' | null>(null)
@@ -266,21 +269,60 @@ export function Mapa() {
   const sinMapa = (datos ?? []).length - conMapa.length
   const puntos = conMapa.map(p => [p.lat!, p.lng!] as [number, number])
 
+  /*
+    El camino por las calles se pregunta afuera, así que va en un efecto y no
+    en el render. Si el recorrido cambia antes de que llegue la respuesta, la
+    consulta anterior se aborta: lo que vuelve ya no corresponde a lo que se
+    está mirando.
+
+    El efecto solo consulta. Apagar la medición le toca a `cambiarRecorrido`,
+    que es donde el recorrido cambia de verdad: poner estado dentro de un
+    efecto encadena un render de más y la lista parpadea.
+  */
+  useEffect(() => {
+    if (!recorrido || recorrido.length < 2) return
+    const control = new AbortController()
+    trazarRecorrido(
+      recorrido.map(p => [p.lat!, p.lng!] as [number, number]),
+      control.signal,
+    )
+      .then(t => {
+        if (!control.signal.aborted) setTrazado(t)
+      })
+      .finally(() => {
+        if (!control.signal.aborted) setTrazando(false)
+      })
+    return () => control.abort()
+  }, [recorrido])
+
+  /** Otro recorrido es otro camino: lo medido ya no sirve. */
+  function cambiarRecorrido(nuevo: Prospecto[] | null) {
+    setRecorrido(nuevo)
+    setTrazado(null)
+    setTrazando(nuevo !== null && nuevo.length > 1)
+  }
+
   function alternarEstado(e: EstadoProspecto) {
-    setRecorrido(null)
+    cambiarRecorrido(null)
     setEstados(a => (a.includes(e) ? a.filter(x => x !== e) : [...a, e]))
   }
 
   function planificar() {
     if (conMapa.length === 0) return
+    // Ya está ordenado: el botón pasa a ser «ver», y no se vuelve a pedir la
+    // ubicación ni a medir las calles de nuevo.
+    if (recorrido) {
+      setHoja('planificar')
+      return
+    }
     navigator.geolocation?.getCurrentPosition(
-      pos => setRecorrido(ordenarRecorrido(conMapa, [pos.coords.latitude, pos.coords.longitude])),
-      () => setRecorrido(ordenarRecorrido(conMapa, [conMapa[0].lat!, conMapa[0].lng!])),
+      pos => cambiarRecorrido(ordenarRecorrido(conMapa, [pos.coords.latitude, pos.coords.longitude])),
+      () => cambiarRecorrido(ordenarRecorrido(conMapa, [conMapa[0].lat!, conMapa[0].lng!])),
       { timeout: 5000 },
     )
     // Si el navegador no responde rápido, igual se ordena desde el primer local.
     if (!navigator.geolocation) {
-      setRecorrido(ordenarRecorrido(conMapa, [conMapa[0].lat!, conMapa[0].lng!]))
+      cambiarRecorrido(ordenarRecorrido(conMapa, [conMapa[0].lat!, conMapa[0].lng!]))
     }
     setHoja('planificar')
   }
@@ -344,7 +386,7 @@ export function Mapa() {
               key={valor}
               onClick={() => {
                 setZona(valor)
-                setRecorrido(null)
+                cambiarRecorrido(null)
               }}
               className={`shrink-0 rounded-full border px-3 py-1 text-sm ${
                 zona === valor ? 'border-grafito bg-grafito text-papel' : 'border-linea-2 bg-white text-mut'
@@ -391,11 +433,30 @@ export function Mapa() {
             />
             <AjustarVista puntos={puntos} />
 
+            {/*
+              El camino va en dos líneas: un realce claro debajo y el acero
+              arriba. Sobre las baldosas de OSM una línea sola se pierde entre
+              las calles impresas. Mientras se mide —o si el servicio no
+              responde— queda la recta punteada, que no engaña a nadie.
+            */}
             {recorrido && recorrido.length > 1 && (
-              <Polyline
-                positions={recorrido.map(p => [p.lat!, p.lng!] as [number, number])}
-                pathOptions={{ color: '#14181f', weight: 2, dashArray: '6 6', opacity: 0.6 }}
-              />
+              trazado ? (
+                <>
+                  <Polyline
+                    positions={trazado.linea}
+                    pathOptions={{ color: '#f8f7f4', weight: 8, opacity: 0.9 }}
+                  />
+                  <Polyline
+                    positions={trazado.linea}
+                    pathOptions={{ color: '#4f73a8', weight: 4 }}
+                  />
+                </>
+              ) : (
+                <Polyline
+                  positions={recorrido.map(p => [p.lat!, p.lng!] as [number, number])}
+                  pathOptions={{ color: '#14181f', weight: 2, dashArray: '6 6', opacity: 0.6 }}
+                />
+              )
             )}
 
             <Pines locales={conMapa} recorrido={recorrido} alRegistrar={setRegistrando} />
@@ -435,13 +496,41 @@ export function Mapa() {
             {plural((recorrido ?? conMapa).length, 'parada', 'paradas')}, ordenadas desde donde
             estás hacia el local más cercano en cada paso.
           </p>
+          <p className="text-sm">
+            {trazando ? (
+              <span className="text-faint">Midiendo el camino por las calles…</span>
+            ) : trazado ? (
+              <span className="font-mono text-acero-dk">
+                {kilometros(trazado.metros)} · {duracion(trazado.segundos)} a pie
+                {(recorrido ?? conMapa).length > MAX_TRAZADO && ` · primeras ${MAX_TRAZADO}`}
+              </span>
+            ) : (
+              <span className="text-faint">
+                Sin medición por calles: el trazo del mapa es en línea recta.
+              </span>
+            )}
+          </p>
           <ol className="max-h-56 space-y-1 overflow-y-auto rounded-lg border border-linea bg-white p-3 text-sm">
-            {(recorrido ?? conMapa).slice(0, 30).map((p, i) => (
-              <li key={p.id} className="flex gap-2">
-                <span className="font-mono text-xs text-faint">{String(i + 1).padStart(2, '0')}</span>
-                <span className="min-w-0 flex-1 truncate">{p.nombre}</span>
+            {(recorrido ?? conMapa).slice(0, MAX_TRAZADO).map((p, i) => {
+              const tramo = i > 0 ? trazado?.tramos[i - 1] : undefined
+              return (
+                <li key={p.id} className="flex items-baseline gap-2">
+                  <span className="font-mono text-xs text-faint">{String(i + 1).padStart(2, '0')}</span>
+                  <span className="min-w-0 flex-1 truncate">{p.nombre}</span>
+                  {tramo && (
+                    <span className="shrink-0 font-mono text-xs text-faint">
+                      {/* Dos locales de la misma cuadra son «40 m», no «0 min». */}
+                      {tramo.segundos < 60 ? kilometros(tramo.metros) : duracion(tramo.segundos)}
+                    </span>
+                  )}
+                </li>
+              )
+            })}
+            {(recorrido ?? conMapa).length > MAX_TRAZADO && (
+              <li className="pt-1 text-xs text-faint">
+                y {(recorrido ?? conMapa).length - MAX_TRAZADO} más en el orden calculado
               </li>
-            ))}
+            )}
           </ol>
           <Boton variante="acento" className="w-full" onClick={abrirEnGoogleMaps}>
             Abrir en Google Maps

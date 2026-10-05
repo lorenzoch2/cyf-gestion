@@ -54,6 +54,19 @@ export function vencimiento(iso: string | null | undefined): { texto: string; to
   return { texto: fechaCorta(iso), tono: 'mut' }
 }
 
+/** 640 m, 1,5 km: a esta escala el metro redondo basta. */
+export function kilometros(metros: number): string {
+  if (metros < 950) return `${Math.round(metros / 10) * 10} m`
+  return `${(metros / 1000).toLocaleString('es-CL', { maximumFractionDigits: 1 })} km`
+}
+
+/** 420 s → «7 min» · 5400 s → «1 h 30». */
+export function duracion(segundos: number): string {
+  const minutos = Math.round(segundos / 60)
+  if (minutos < 60) return `${minutos} min`
+  return `${Math.floor(minutos / 60)} h ${String(minutos % 60).padStart(2, '0')}`
+}
+
 /** +56 9 1234 5678 → enlaces listos para el teléfono. */
 export function soloDigitos(telefono: string | null | undefined): string {
   return (telefono ?? '').replace(/\D/g, '')
