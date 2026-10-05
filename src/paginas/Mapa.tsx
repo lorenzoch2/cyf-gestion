@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { CircleMarker, MapContainer, Marker, Polyline, Popup, TileLayer, useMap } from 'react-leaflet'
+import {
+  CircleMarker, MapContainer, Marker, Polyline, Popup, TileLayer, useMap, useMapEvents,
+} from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { Aviso, Boton, Campo, Cargando, Hoja, Selector } from '../componentes/ui'
@@ -18,6 +20,19 @@ import {
 /** Centro de la campaña: entre Plaza Ñuñoa y Plaza Egaña. */
 const CENTRO: [number, number] = [-33.4558, -70.5888]
 
+/** Lado de la celda de agrupación, en píxeles de pantalla. */
+const CELDA = 58
+
+/**
+ * Qué estado manda en un grupo: el más avanzado de la conversación.
+ *
+ * Un grupo con un cliente adentro se pinta de verde aunque los otros nueve
+ * estén por visitar. De lejos, lo que interesa ver es dónde ya hay algo.
+ */
+const PESO_ESTADO: EstadoProspecto[] = [
+  'cliente', 'cotizado', 'evaluacion', 'interesado', 'visitado', 'por_visitar', 'descartado',
+]
+
 /** Número de parada, dibujado sobre el punto. */
 function iconoParada(numero: number) {
   return L.divIcon({
@@ -28,6 +43,20 @@ function iconoParada(numero: number) {
       `box-shadow:0 0 0 2px #f8f7f4">${numero}</div>`,
     iconSize: [22, 22],
     iconAnchor: [11, 11],
+  })
+}
+
+/** Grupo de locales encimados: cuántos son, y de qué color el que manda. */
+function iconoGrupo(cuantos: number, color: string) {
+  const lado = cuantos > 50 ? 44 : cuantos > 15 ? 38 : 32
+  return L.divIcon({
+    className: '',
+    html:
+      `<div style="width:${lado}px;height:${lado}px;border-radius:999px;background:#14181f;` +
+      `color:#f8f7f4;font:600 ${lado > 38 ? 13 : 12}px/${lado - 6}px 'IBM Plex Sans',sans-serif;` +
+      `text-align:center;border:3px solid ${color};box-shadow:0 1px 4px rgba(20,24,31,.35)">${cuantos}</div>`,
+    iconSize: [lado, lado],
+    iconAnchor: [lado / 2, lado / 2],
   })
 }
 
@@ -80,6 +109,129 @@ function AjustarVista({ puntos }: { puntos: [number, number][] }) {
   return null
 }
 
+interface Grupo {
+  centro: [number, number]
+  items: Prospecto[]
+}
+
+/**
+ * Los puntos del mapa, agrupados por cercanía en pantalla.
+ *
+ * La agrupación se calcula en píxeles al zoom actual: lo que se ve encimado se
+ * junta, y al acercarse los grupos se abren solos. Con un recorrido planificado
+ * no se agrupa nada — ahí lo que importa es ver cada parada con su número.
+ */
+function Pines({
+  locales,
+  recorrido,
+  alRegistrar,
+}: {
+  locales: Prospecto[]
+  recorrido: Prospecto[] | null
+  alRegistrar: (p: Prospecto) => void
+}) {
+  const mapa = useMap()
+  const [zoom, setZoom] = useState(() => mapa.getZoom())
+  useMapEvents({ zoomend: () => setZoom(mapa.getZoom()) })
+
+  const grupos = useMemo<Grupo[]>(() => {
+    if (recorrido) return locales.map(p => ({ centro: [p.lat!, p.lng!] as [number, number], items: [p] }))
+    const celdas = new Map<string, Prospecto[]>()
+    for (const p of locales) {
+      const punto = mapa.project([p.lat!, p.lng!], zoom)
+      const clave = `${Math.floor(punto.x / CELDA)}:${Math.floor(punto.y / CELDA)}`
+      const celda = celdas.get(clave)
+      if (celda) celda.push(p)
+      else celdas.set(clave, [p])
+    }
+    return [...celdas.values()].map(items => ({
+      centro: [
+        items.reduce((s, p) => s + p.lat!, 0) / items.length,
+        items.reduce((s, p) => s + p.lng!, 0) / items.length,
+      ] as [number, number],
+      items,
+    }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locales, zoom, recorrido])
+
+  return (
+    <>
+      {grupos.map(grupo => {
+        if (grupo.items.length > 1) {
+          const manda = PESO_ESTADO.find(e => grupo.items.some(p => p.estado === e)) ?? 'por_visitar'
+          return (
+            <Marker
+              key={'grupo-' + grupo.items[0].id + '-' + grupo.items.length}
+              position={grupo.centro}
+              icon={iconoGrupo(grupo.items.length, COLOR_ESTADO[manda])}
+              eventHandlers={{ click: () => mapa.setView(grupo.centro, Math.min(zoom + 2, 18)) }}
+            />
+          )
+        }
+
+        const p = grupo.items[0]
+        const posicion = recorrido ? recorrido.findIndex(x => x.id === p.id) + 1 : 0
+        return (
+          <CircleMarker
+            key={p.id}
+            center={[p.lat!, p.lng!]}
+            radius={p.prioridad === 'alta' ? 8 : 6}
+            pathOptions={{
+              color: '#ffffff',
+              weight: 2,
+              fillColor: COLOR_ESTADO[p.estado],
+              fillOpacity: 1,
+            }}
+          >
+            <Popup>
+              <div className="min-w-[11rem]">
+                <p className="text-sm font-semibold">
+                  {posicion > 0 && <span className="text-mut">{posicion}. </span>}
+                  {p.nombre}
+                </p>
+                <p className="mt-0.5 text-xs text-mut">
+                  {[p.rubro, p.direccion].filter(Boolean).join(' · ')}
+                </p>
+                <p className="mt-1 text-xs" style={{ color: COLOR_ESTADO[p.estado] }}>
+                  {ESTADOS_PROSPECTO[p.estado].etiqueta}
+                </p>
+                <button
+                  onClick={() => alRegistrar(p)}
+                  className="mt-2 w-full rounded-lg bg-laton px-3 py-1.5 text-xs font-semibold text-grafito"
+                >
+                  Registrar visita
+                </button>
+                <div className="mt-2 flex gap-3">
+                  <Link to={`/prospectos/${p.id}`} className="text-xs font-medium text-acero-dk">
+                    Ver ficha
+                  </Link>
+                  <a
+                    href={enlaceMapa(p.lat, p.lng, p.direccion) ?? '#'}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs font-medium text-acero-dk"
+                  >
+                    Cómo llegar
+                  </a>
+                </div>
+              </div>
+            </Popup>
+          </CircleMarker>
+        )
+      })}
+
+      {recorrido?.slice(0, 20).map((p, i) => (
+        <Marker
+          key={'parada-' + p.id}
+          position={[p.lat!, p.lng!]}
+          icon={iconoParada(i + 1)}
+          interactive={false}
+        />
+      ))}
+    </>
+  )
+}
+
 /*
   `fadeAnimation` va apagada a propósito: con reencuadres seguidos —que es lo
   que pasa al cambiar filtros— Leaflet deja baldosas pegadas en opacidad cero y
@@ -92,9 +244,9 @@ export function Mapa() {
   const [estados, setEstados] = useState<EstadoProspecto[]>([])
   const [ruta, setRuta] = useState(parametros.get('ruta') ?? '')
   const [recorrido, setRecorrido] = useState<Prospecto[] | null>(null)
-  const [hoja, setHoja] = useState<'planificar' | 'guardar' | null>(null)
   const [registrando, setRegistrando] = useState<Prospecto | null>(null)
   const [aviso, setAviso] = useState<Deshacer | null>(null)
+  const [hoja, setHoja] = useState<'planificar' | 'guardar' | null>(null)
   const [nombreRuta, setNombreRuta] = useState('')
   const [fechaRuta, setFechaRuta] = useState(hoyIso())
 
@@ -186,7 +338,7 @@ export function Mapa() {
           </Link>
         </div>
 
-        <div className="-mx-0 flex gap-2 overflow-x-auto px-4 pb-2">
+        <div className="flex gap-2 overflow-x-auto px-4 pb-2">
           {[['', 'Todas'], ...Object.entries(ZONAS)].map(([valor, texto]) => (
             <button
               key={valor}
@@ -246,65 +398,7 @@ export function Mapa() {
               />
             )}
 
-            {recorrido?.slice(0, 20).map((p, i) => (
-              <Marker
-                key={'parada-' + p.id}
-                position={[p.lat!, p.lng!]}
-                icon={iconoParada(i + 1)}
-                interactive={false}
-              />
-            ))}
-
-            {conMapa.map(p => {
-              const posicion = recorrido ? recorrido.findIndex(x => x.id === p.id) + 1 : 0
-              return (
-                <CircleMarker
-                  key={p.id}
-                  center={[p.lat!, p.lng!]}
-                  radius={p.prioridad === 'alta' ? 8 : 6}
-                  pathOptions={{
-                    color: '#ffffff',
-                    weight: 2,
-                    fillColor: COLOR_ESTADO[p.estado],
-                    fillOpacity: 1,
-                  }}
-                >
-                  <Popup>
-                    <div className="min-w-[11rem]">
-                      <p className="text-sm font-semibold">
-                        {posicion > 0 && <span className="text-mut">{posicion}. </span>}
-                        {p.nombre}
-                      </p>
-                      <p className="mt-0.5 text-xs text-mut">
-                        {[p.rubro, p.direccion].filter(Boolean).join(' · ')}
-                      </p>
-                      <p className="mt-1 text-xs" style={{ color: COLOR_ESTADO[p.estado] }}>
-                        {ESTADOS_PROSPECTO[p.estado].etiqueta}
-                      </p>
-                      <button
-                        onClick={() => setRegistrando(p)}
-                        className="mt-2 w-full rounded-lg bg-laton px-3 py-1.5 text-xs font-semibold text-grafito"
-                      >
-                        Registrar visita
-                      </button>
-                      <div className="mt-2 flex gap-3">
-                        <Link to={`/prospectos/${p.id}`} className="text-xs font-medium text-acero-dk">
-                          Ver ficha
-                        </Link>
-                        <a
-                          href={enlaceMapa(p.lat, p.lng, p.direccion) ?? '#'}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-xs font-medium text-acero-dk"
-                        >
-                          Cómo llegar
-                        </a>
-                      </div>
-                    </div>
-                  </Popup>
-                </CircleMarker>
-              )
-            })}
+            <Pines locales={conMapa} recorrido={recorrido} alRegistrar={setRegistrando} />
           </MapContainer>
         )}
 

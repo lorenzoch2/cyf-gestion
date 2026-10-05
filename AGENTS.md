@@ -66,6 +66,12 @@ src/
 - **Un precio se resuelve en cascada**: tarifario del cliente → de su zona → general. Un
   tarifario especial sólo guarda lo que de verdad cambia; el resto lo hereda. Esa lógica vive en
   `tarifarioQueAplica()` y no debe duplicarse en las pantallas.
+- **El mapa agrupa sin librería.** `Pines` junta los locales por celdas de 58 px calculadas con
+  `mapa.project()` al zoom actual: lo que se ve encimado se junta y al acercarse se abre solo.
+  No se usó un plugin de clustering porque hacía falta que el grupo se pintara con el estado
+  más avanzado que contiene —`PESO_ESTADO`— y porque los puntos sueltos se dibujan en canvas,
+  que aguanta 333 sin pestañear. Con un recorrido planificado no se agrupa: ahí importa ver
+  cada parada con su número.
 - **El color del estado de gestión es uno solo** y vive en `ESTADOS_PROSPECTO` (`tipos.ts`):
   el mismo en la lista, en la ficha y —cuando llegue— en el mapa.
 - **Latón para la acción, acero para la estructura.** El botón de latón lleva texto grafito, nunca
