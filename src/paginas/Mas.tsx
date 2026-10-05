@@ -5,6 +5,7 @@ import { useSesion } from '../lib/sesion'
 
 const SECCIONES = [
   { a: '/tareas', titulo: 'Pendientes', detalle: 'Lo que hay que hacer y cuándo vence' },
+  { a: '/rutas', titulo: 'Rutas', detalle: 'Los locales que se caminan en una tarde' },
   { a: '/tarifario', titulo: 'Tarifario', detalle: 'Precios por equipo y servicios adicionales' },
   { a: '/presupuestos', titulo: 'Presupuestos', detalle: 'Armar y seguir las cotizaciones' },
 ]

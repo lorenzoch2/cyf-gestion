@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
-  Boton, Campo, Cargando, Error, Hoja, Pantalla, Selector, Tarjeta, Vacio,
+  Boton, Campo, Cargando, Confirmar, Dato, Error, Hoja, Pantalla, Selector, Tarjeta, Vacio,
 } from '../componentes/ui'
 import {
   borrarLinea, borrarPresupuesto, consultarLineas, consultarPresupuesto, consultarServicios,
-  crearLinea, guardarPresupuesto, useConsulta,
+  crearLinea, guardarPresupuesto, tarifarioQueAplica, useConsulta,
 } from '../lib/datos'
 import { clp, conIva, fechaCorta } from '../lib/formato'
 import {
@@ -19,28 +19,45 @@ export function PresupuestoDetalle() {
   const { datos: p, cargando, error, recargar } = useConsulta<Presupuesto>(() => consultarPresupuesto(id), [id])
   const lineas = useConsulta<LineaPresupuesto[]>(() => consultarLineas(id), [id])
   const servicios = useConsulta<Servicio[]>(() => consultarServicios(), [])
+  const tarifa = useConsulta(
+    () => tarifarioQueAplica(p?.cliente_id ?? null, null).then(data => ({ data, error: null })),
+    [p?.cliente_id],
+  )
 
-  const [abierta, setAbierta] = useState(false)
+  const [hoja, setHoja] = useState<'linea' | 'ajustes' | null>(null)
+  const [confirmando, setConfirmando] = useState<'presupuesto' | LineaPresupuesto | null>(null)
+
   const [servicioId, setServicioId] = useState('')
   const [descripcion, setDescripcion] = useState('')
   const [cantidad, setCantidad] = useState('1')
   const [precio, setPrecio] = useState('')
 
+  const [estado, setEstado] = useState<EstadoPresupuesto>('borrador')
+  const [descuento, setDescuento] = useState('0')
+
   if (cargando) return <Cargando />
-  if (error || !p) return <Pantalla titulo="Presupuesto" volver><Error mensaje={error ?? 'No se encontró'} /></Pantalla>
+  if (error || !p) {
+    return (
+      <Pantalla titulo="Presupuesto" volver>
+        <Error mensaje={error ?? 'No se encontró'} />
+      </Pantalla>
+    )
+  }
 
   const items = lineas.datos ?? []
   const neto = items.reduce((t, l) => t + l.cantidad * l.precio_unitario_neto, 0)
-  const descuento = Math.round((neto * Number(p.descuento_pct)) / 100)
-  const netoFinal = neto - descuento
+  const rebaja = Math.round((neto * Number(p.descuento_pct)) / 100)
+  const netoFinal = neto - rebaja
   const total = conIva(netoFinal)
+  const precios = tarifa.datos?.precios ?? {}
 
   function elegirServicio(valor: string) {
     setServicioId(valor)
     const s = (servicios.datos ?? []).find(x => x.id === valor)
     if (s) {
       setDescripcion(s.nombre)
-      setPrecio(String(s.precio_neto))
+      // El precio sale del tarifario que le toca a este cliente.
+      setPrecio(String(precios[s.id] ?? s.precio_neto))
     }
   }
 
@@ -57,12 +74,20 @@ export function PresupuestoDetalle() {
     setDescripcion('')
     setCantidad('1')
     setPrecio('')
-    setAbierta(false)
+    setHoja(null)
     void lineas.recargar()
   }
 
-  async function cambiarEstado(estado: EstadoPresupuesto) {
-    await guardarPresupuesto(id, { estado })
+  function abrirAjustes() {
+    if (!p) return
+    setEstado(p.estado)
+    setDescuento(String(p.descuento_pct))
+    setHoja('ajustes')
+  }
+
+  async function guardarAjustes() {
+    await guardarPresupuesto(id, { estado, descuento_pct: Number(descuento) || 0 })
+    setHoja(null)
     void recargar()
   }
 
@@ -71,16 +96,18 @@ export function PresupuestoDetalle() {
       `*Calor y Frío Industrial* — Presupuesto ${p?.numero ?? ''}`,
       p?.titulo ?? '',
       '',
-      ...items.map(l => `• ${l.descripcion} — ${l.cantidad} × ${clp(l.precio_unitario_neto)} = ${clp(l.cantidad * l.precio_unitario_neto)}`),
+      ...items.map(
+        l => `• ${l.descripcion} — ${l.cantidad} × ${clp(l.precio_unitario_neto)} = ${clp(l.cantidad * l.precio_unitario_neto)}`,
+      ),
       '',
+      ...(rebaja ? [`Descuento ${p?.descuento_pct}%: −${clp(rebaja)}`] : []),
       `Neto: ${clp(netoFinal)}`,
       `IVA: ${clp(total - netoFinal)}`,
       `*Total: ${clp(total)}*`,
       '',
       'Valores netos más IVA. Garantía de 30 días sobre la mano de obra.',
     ].join('\n')
-    const url = `https://wa.me/?text=${encodeURIComponent(texto)}`
-    window.open(url, '_blank')
+    window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank')
   }
 
   const opcionesServicio: [string, string][] = [
@@ -89,18 +116,22 @@ export function PresupuestoDetalle() {
   ]
 
   return (
-    <Pantalla titulo={p.titulo ?? 'Presupuesto'} bajada={`${p.numero ?? ''} · ${fechaCorta(p.fecha)}`} volver>
-      <Selector
-        etiqueta="Estado"
-        opciones={Object.entries(ESTADOS_PRESUPUESTO)}
-        value={p.estado}
-        onChange={e => cambiarEstado(e.target.value as EstadoPresupuesto)}
-      />
+    <Pantalla
+      titulo={p.titulo ?? 'Presupuesto'}
+      bajada={`${p.numero ?? ''} · ${fechaCorta(p.fecha)}`}
+      volver
+      accion={<Boton onClick={abrirAjustes} className="min-h-9 px-3 text-sm">Ajustes</Boton>}
+    >
+      <Tarjeta>
+        <Dato etiqueta="Estado">{ESTADOS_PRESUPUESTO[p.estado]}</Dato>
+        <Dato etiqueta="Descuento">{p.descuento_pct}%</Dato>
+        {tarifa.datos?.tarifario && <Dato etiqueta="Tarifario">{tarifa.datos.tarifario.nombre}</Dato>}
+      </Tarjeta>
 
       <section className="mt-4">
         <h2 className="mb-2 flex items-center justify-between text-sm font-semibold">
           Líneas
-          <Boton onClick={() => setAbierta(true)} className="min-h-9 px-3 text-sm">agregar</Boton>
+          <Boton onClick={() => setHoja('linea')} className="min-h-9 px-3 text-sm">agregar</Boton>
         </h2>
         {items.length === 0 ? (
           <Vacio texto="Sin líneas. Se agregan desde el tarifario o a mano." />
@@ -117,13 +148,7 @@ export function PresupuestoDetalle() {
                   </div>
                   <div className="shrink-0 text-right">
                     <p className="font-mono text-sm">{clp(l.cantidad * l.precio_unitario_neto)}</p>
-                    <button
-                      onClick={async () => {
-                        await borrarLinea(l.id)
-                        void lineas.recargar()
-                      }}
-                      className="text-xs text-faint active:text-rojo"
-                    >
+                    <button onClick={() => setConfirmando(l)} className="text-xs text-faint active:text-rojo">
                       quitar
                     </button>
                   </div>
@@ -139,23 +164,12 @@ export function PresupuestoDetalle() {
           <span className="text-mut">Neto</span>
           <span className="font-mono">{clp(neto)}</span>
         </div>
-        <div className="flex items-center justify-between gap-3 border-t border-linea py-2 text-sm">
-          <span className="text-mut">Descuento</span>
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              inputMode="numeric"
-              value={p.descuento_pct}
-              onChange={async e => {
-                await guardarPresupuesto(id, { descuento_pct: Number(e.target.value) || 0 })
-                void recargar()
-              }}
-              className="w-16 rounded border border-linea-2 px-2 py-1 text-right"
-            />
-            <span className="text-mut">%</span>
-            <span className="font-mono w-20 text-right">−{clp(descuento)}</span>
+        {rebaja > 0 && (
+          <div className="flex items-baseline justify-between border-t border-linea py-1 text-sm">
+            <span className="text-mut">Descuento {p.descuento_pct}%</span>
+            <span className="font-mono">−{clp(rebaja)}</span>
           </div>
-        </div>
+        )}
         <div className="flex items-baseline justify-between border-t border-linea py-1 text-sm">
           <span className="text-mut">IVA 19%</span>
           <span className="font-mono">{clp(total - netoFinal)}</span>
@@ -168,18 +182,10 @@ export function PresupuestoDetalle() {
 
       <div className="mt-4 grid grid-cols-2 gap-2">
         <Boton variante="acento" onClick={compartir}>Compartir</Boton>
-        <Boton
-          variante="peligro"
-          onClick={async () => {
-            await borrarPresupuesto(id)
-            navegar('/presupuestos')
-          }}
-        >
-          Borrar
-        </Boton>
+        <Boton variante="peligro" onClick={() => setConfirmando('presupuesto')}>Borrar</Boton>
       </div>
 
-      <Hoja abierta={abierta} titulo="Agregar línea" alCerrar={() => setAbierta(false)}>
+      <Hoja abierta={hoja === 'linea'} titulo="Agregar línea" alCerrar={() => setHoja(null)}>
         <div className="space-y-3">
           <Selector etiqueta="Del tarifario" opciones={opcionesServicio} value={servicioId} onChange={e => elegirServicio(e.target.value)} />
           <Campo etiqueta="Descripción" value={descripcion} onChange={e => setDescripcion(e.target.value)} />
@@ -187,9 +193,57 @@ export function PresupuestoDetalle() {
             <Campo etiqueta="Cantidad" type="number" inputMode="decimal" value={cantidad} onChange={e => setCantidad(e.target.value)} />
             <Campo etiqueta="Precio neto" type="number" inputMode="numeric" value={precio} onChange={e => setPrecio(e.target.value)} />
           </div>
-          <Boton variante="acento" className="w-full" onClick={agregarLinea}>Agregar</Boton>
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            <Boton onClick={() => setHoja(null)}>Cancelar</Boton>
+            <Boton variante="acento" onClick={agregarLinea}>Agregar</Boton>
+          </div>
         </div>
       </Hoja>
+
+      <Hoja abierta={hoja === 'ajustes'} titulo="Ajustes del presupuesto" alCerrar={() => setHoja(null)}>
+        <div className="space-y-3">
+          <Selector
+            etiqueta="Estado"
+            opciones={Object.entries(ESTADOS_PRESUPUESTO)}
+            value={estado}
+            onChange={e => setEstado(e.target.value as EstadoPresupuesto)}
+          />
+          <Campo
+            etiqueta="Descuento (%)"
+            type="number"
+            inputMode="decimal"
+            value={descuento}
+            onChange={e => setDescuento(e.target.value)}
+            pista={`Sobre ${clp(neto)} netos son ${clp(Math.round((neto * (Number(descuento) || 0)) / 100))}`}
+          />
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            <Boton onClick={() => setHoja(null)}>Cancelar</Boton>
+            <Boton variante="acento" onClick={guardarAjustes}>Guardar</Boton>
+          </div>
+        </div>
+      </Hoja>
+
+      <Confirmar
+        abierta={confirmando !== null}
+        titulo={confirmando === 'presupuesto' ? '¿Borrar el presupuesto?' : '¿Quitar la línea?'}
+        detalle={
+          confirmando === 'presupuesto'
+            ? 'Se borra con todas sus líneas. No se puede deshacer.'
+            : undefined
+        }
+        textoAceptar={confirmando === 'presupuesto' ? 'Borrar' : 'Quitar'}
+        peligro
+        alCerrar={() => setConfirmando(null)}
+        alAceptar={async () => {
+          if (confirmando === 'presupuesto') {
+            await borrarPresupuesto(id)
+            navegar('/presupuestos')
+          } else if (confirmando) {
+            await borrarLinea(confirmando.id)
+            void lineas.recargar()
+          }
+        }}
+      />
     </Pantalla>
   )
 }

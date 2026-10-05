@@ -240,6 +240,48 @@ export function Hoja({
   )
 }
 
+/**
+ * Confirmación para lo que no se puede deshacer.
+ *
+ * Nada se borra ni se convierte de un solo toque: la app se usa caminando y un
+ * dedo en la pantalla equivocada no debe costar un registro.
+ */
+export function Confirmar({
+  abierta,
+  titulo,
+  detalle,
+  textoAceptar = 'Confirmar',
+  peligro = false,
+  alAceptar,
+  alCerrar,
+}: {
+  abierta: boolean
+  titulo: string
+  detalle?: string
+  textoAceptar?: string
+  peligro?: boolean
+  alAceptar: () => void
+  alCerrar: () => void
+}) {
+  return (
+    <Hoja abierta={abierta} titulo={titulo} alCerrar={alCerrar}>
+      {detalle && <p className="mb-4 text-sm text-mut">{detalle}</p>}
+      <div className="grid grid-cols-2 gap-2">
+        <Boton onClick={alCerrar}>Cancelar</Boton>
+        <Boton
+          variante={peligro ? 'peligro' : 'acento'}
+          onClick={() => {
+            alAceptar()
+            alCerrar()
+          }}
+        >
+          {textoAceptar}
+        </Boton>
+      </div>
+    </Hoja>
+  )
+}
+
 export function Dato({ etiqueta, children }: { etiqueta: string; children: ReactNode }) {
   return (
     <div className="flex items-baseline justify-between gap-4 border-b border-linea py-2 last:border-0">

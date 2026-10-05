@@ -87,9 +87,10 @@ export function Presupuestos() {
             value={clienteId}
             onChange={e => setClienteId(e.target.value)}
           />
-          <Boton variante="acento" className="w-full" onClick={crear}>
-            Crear y agregar líneas
-          </Boton>
+          <div className="grid grid-cols-2 gap-2">
+            <Boton onClick={() => setAbierta(false)}>Cancelar</Boton>
+            <Boton variante="acento" onClick={crear}>Crear</Boton>
+          </div>
         </div>
       </Hoja>
     </Pantalla>

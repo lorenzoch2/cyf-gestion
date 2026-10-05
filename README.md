@@ -14,8 +14,9 @@ No es el sitio público — ese vive en
 | **Prospectos** | Los locales de la campaña, filtrados por zona y estado. Llamar, WhatsApp, mapa y registrar la visita |
 | **Clientes** | Ficha con equipos, contratos de mantención e historial de visitas |
 | **Negocios** | Qué se está cotizando y en qué etapa va, con el monto en juego |
+| **Rutas** | Los locales que se caminan en una tarde, con cuántos faltan por visitar |
 | **Pendientes** | Tareas con fecha de vencimiento |
-| **Tarifario** | Los precios por equipo, netos y con IVA |
+| **Tarifario** | Precios por equipo, netos y con IVA. Uno general y los que se quieran por zona o por cliente |
 | **Presupuestos** | Armar una cotización desde el tarifario y mandarla por WhatsApp |
 
 ## Montar el proyecto
@@ -33,6 +34,7 @@ En el panel de Supabase, **SQL Editor**, ejecutar en este orden:
 1. `supabase/schema.sql` — tablas, índices y permisos
 2. `supabase/seed-servicios.sql` — el tarifario
 3. `supabase/seed-prospectos.sql` — los 333 locales de la campaña
+4. `supabase/migracion-02-flexibilidad.sql` — estados de gestión, rutas y tarifarios múltiples
 
 Las cuentas se crean a mano en **Authentication → Users**. No hay registro abierto: son dos
 personas y cada una entra con su correo.

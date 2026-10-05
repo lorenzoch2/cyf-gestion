@@ -1,12 +1,15 @@
-/** Las filas de la base, tal como las devuelve Supabase. */
+/** Las filas de la base, tal como las devuelve Supabase, y sus etiquetas. */
 
 export type Prioridad = 'alta' | 'media' | 'baja'
-export type EstadoProspecto = 'por_visitar' | 'visitado' | 'evaluacion' | 'cliente' | 'descartado'
+export type EstadoProspecto =
+  | 'por_visitar' | 'visitado' | 'interesado' | 'evaluacion' | 'cotizado' | 'cliente' | 'descartado'
 export type Etapa = 'nueva' | 'evaluacion' | 'cotizada' | 'negociacion' | 'ganada' | 'perdida'
 export type TipoVisita = 'prospeccion' | 'evaluacion' | 'mantencion' | 'correctivo' | 'instalacion'
 export type PlanContrato = 'trimestral' | 'semestral' | 'anual' | 'por_evento'
 export type EstadoPresupuesto = 'borrador' | 'enviado' | 'aceptado' | 'rechazado'
 export type CategoriaServicio = 'climatizacion' | 'refrigeracion' | 'adicional'
+export type TipoTarifario = 'base' | 'zona' | 'cliente'
+export type EstadoRuta = 'planificada' | 'en_curso' | 'terminada'
 
 export interface Cliente {
   id: string
@@ -47,6 +50,18 @@ export interface Prospecto {
   equipos_declarados: number | null
   notas: string | null
   cliente_id: string | null
+  ruta_id: string | null
+  origen: 'osm' | 'manual'
+}
+
+export interface Ruta {
+  id: string
+  nombre: string
+  zona: string | null
+  fecha: string | null
+  notas: string | null
+  estado: EstadoRuta
+  creado_en: string
 }
 
 export interface Equipo {
@@ -124,6 +139,23 @@ export interface Servicio {
   activo: boolean
 }
 
+export interface Tarifario {
+  id: string
+  nombre: string
+  tipo: TipoTarifario
+  zona: string | null
+  cliente_id: string | null
+  notas: string | null
+  activo: boolean
+}
+
+export interface PrecioTarifario {
+  id: string
+  tarifario_id: string
+  servicio_id: string
+  precio_neto: number
+}
+
 export interface Presupuesto {
   id: string
   numero: string | null
@@ -146,7 +178,7 @@ export interface LineaPresupuesto {
   orden: number
 }
 
-/* ── Etiquetas para mostrar ─────────────────────────────────────────────── */
+/* ── Etiquetas y colores ────────────────────────────────────────────────── */
 
 export const ZONAS: Record<string, string> = {
   egana: 'Plaza Egaña',
@@ -154,12 +186,60 @@ export const ZONAS: Record<string, string> = {
   irarrazaval: 'Metro Irarrázabal',
 }
 
-export const ESTADOS_PROSPECTO: Record<EstadoProspecto, string> = {
-  por_visitar: 'Por visitar',
-  visitado: 'Visitado',
-  evaluacion: 'Evaluación agendada',
-  cliente: 'Cliente',
-  descartado: 'Descartado',
+/**
+ * Estado de gestión de un local: dónde va la conversación.
+ *
+ * El color es el mismo en la lista, en la ficha y —cuando llegue— en el mapa:
+ * un local amarillo es un local interesado, se mire donde se mire.
+ */
+export interface PintaEstado {
+  etiqueta: string
+  corta: string
+  punto: string
+  pastilla: string
+  borde: string
+}
+
+export const ESTADOS_PROSPECTO: Record<EstadoProspecto, PintaEstado> = {
+  por_visitar: {
+    etiqueta: 'Por visitar', corta: 'Por visitar',
+    punto: 'bg-faint', pastilla: 'bg-tinte text-mut', borde: 'border-l-faint',
+  },
+  visitado: {
+    etiqueta: 'Visitado, sin definir', corta: 'Visitado',
+    punto: 'bg-acero', pastilla: 'bg-acero/12 text-acero-dk', borde: 'border-l-acero',
+  },
+  interesado: {
+    etiqueta: 'Interesado', corta: 'Interesado',
+    punto: 'bg-laton', pastilla: 'bg-laton/18 text-laton-dk', borde: 'border-l-laton',
+  },
+  evaluacion: {
+    etiqueta: 'Evaluación agendada', corta: 'Evaluación',
+    punto: 'bg-morado', pastilla: 'bg-morado/12 text-morado', borde: 'border-l-morado',
+  },
+  cotizado: {
+    etiqueta: 'Cotizado, esperando', corta: 'Cotizado',
+    punto: 'bg-naranja', pastilla: 'bg-naranja/12 text-naranja', borde: 'border-l-naranja',
+  },
+  cliente: {
+    etiqueta: 'Cliente', corta: 'Cliente',
+    punto: 'bg-verde', pastilla: 'bg-verde/12 text-verde', borde: 'border-l-verde',
+  },
+  descartado: {
+    etiqueta: 'Descartado', corta: 'Descartado',
+    punto: 'bg-linea-2', pastilla: 'bg-tinte text-faint', borde: 'border-l-linea-2',
+  },
+}
+
+/** El orden en que se muestran: sigue el avance de la conversación. */
+export const ORDEN_ESTADOS: EstadoProspecto[] = [
+  'por_visitar', 'visitado', 'interesado', 'evaluacion', 'cotizado', 'cliente', 'descartado',
+]
+
+export const ESTADOS_RUTA: Record<EstadoRuta, string> = {
+  planificada: 'Planificada',
+  en_curso: 'En curso',
+  terminada: 'Terminada',
 }
 
 export const ETAPAS: Record<Etapa, string> = {
@@ -195,6 +275,12 @@ export const TIPOS_EQUIPO: Record<string, string> = {
   otro: 'Otro',
 }
 
+export const RUBROS: string[] = [
+  'Minimarket', 'Supermercado', 'Botillería', 'Carnicería', 'Pescadería', 'Verdulería',
+  'Panadería', 'Pastelería', 'Restaurante', 'Comida rápida', 'Café', 'Bar', 'Pub',
+  'Heladería', 'Delicatessen', 'Congelados', 'Otro',
+]
+
 export const PLANES: Record<PlanContrato, string> = {
   trimestral: 'Trimestral (4 visitas al año)',
   semestral: 'Semestral (2 visitas al año)',
@@ -213,4 +299,10 @@ export const CATEGORIAS: Record<CategoriaServicio, string> = {
   climatizacion: 'Climatización',
   refrigeracion: 'Refrigeración comercial',
   adicional: 'Servicios adicionales',
+}
+
+export const TIPOS_TARIFARIO: Record<TipoTarifario, string> = {
+  base: 'General',
+  zona: 'Por zona',
+  cliente: 'Por cliente',
 }

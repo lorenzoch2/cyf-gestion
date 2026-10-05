@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import {
-  Area, Boton, Campo, Cargando, Dato, Error, Etiqueta, Hoja, Pantalla, Selector, Tarjeta, Vacio,
+  Area, Boton, Campo, Cargando, Confirmar, Dato, Error, Etiqueta, Hoja, Pantalla, Selector,
+  Tarjeta, Vacio,
 } from '../componentes/ui'
 import { IconoPin, IconoTelefono, IconoWhatsapp } from '../componentes/iconos'
 import {
@@ -22,6 +23,7 @@ export function ClienteDetalle() {
   const visitas = useConsulta<Visita[]>(() => consultarVisitas({ clienteId: id }), [id])
 
   const [hoja, setHoja] = useState<'equipo' | 'contrato' | 'visita' | null>(null)
+  const [quitando, setQuitando] = useState<Equipo | null>(null)
 
   // equipo
   const [tipo, setTipo] = useState('split_muro')
@@ -117,13 +119,7 @@ export function ClienteDetalle() {
                       {[e.capacidad, e.ubicacion].filter(Boolean).join(' · ') || 'Sin detalle'}
                     </p>
                   </div>
-                  <button
-                    onClick={async () => {
-                      await borrarEquipo(e.id)
-                      void equipos.recargar()
-                    }}
-                    className="shrink-0 text-xs text-faint active:text-rojo"
-                  >
+                  <button onClick={() => setQuitando(e)} className="shrink-0 text-xs text-faint active:text-rojo">
                     quitar
                   </button>
                 </Tarjeta>
@@ -188,12 +184,28 @@ export function ClienteDetalle() {
         )}
       </section>
 
+      <Confirmar
+        abierta={quitando !== null}
+        titulo="¿Quitar el equipo?"
+        detalle="Deja de aparecer en la ficha del cliente."
+        textoAceptar="Quitar"
+        peligro
+        alCerrar={() => setQuitando(null)}
+        alAceptar={async () => {
+          if (quitando) await borrarEquipo(quitando.id)
+          void equipos.recargar()
+        }}
+      />
+
       <Hoja abierta={hoja === 'equipo'} titulo="Agregar equipo" alCerrar={() => setHoja(null)}>
         <div className="space-y-3">
           <Selector etiqueta="Tipo" opciones={Object.entries(TIPOS_EQUIPO)} value={tipo} onChange={e => setTipo(e.target.value)} />
           <Campo etiqueta="Capacidad" value={capacidad} onChange={e => setCapacidad(e.target.value)} placeholder="12.000 BTU · 2 HP" />
           <Campo etiqueta="Dónde está" value={ubicacion} onChange={e => setUbicacion(e.target.value)} placeholder="Sala, bodega, techo" />
-          <Boton variante="acento" className="w-full" onClick={guardarEquipo}>Guardar</Boton>
+          <div className="grid grid-cols-2 gap-2">
+            <Boton onClick={() => setHoja(null)}>Cancelar</Boton>
+            <Boton variante="acento" onClick={guardarEquipo}>Guardar</Boton>
+          </div>
         </div>
       </Hoja>
 
@@ -212,7 +224,10 @@ export function ClienteDetalle() {
             value={valorVisita}
             onChange={e => setValorVisita(e.target.value)}
           />
-          <Boton variante="acento" className="w-full" onClick={guardarContrato}>Guardar</Boton>
+          <div className="grid grid-cols-2 gap-2">
+            <Boton onClick={() => setHoja(null)}>Cancelar</Boton>
+            <Boton variante="acento" onClick={guardarContrato}>Guardar</Boton>
+          </div>
         </div>
       </Hoja>
 
@@ -225,7 +240,10 @@ export function ClienteDetalle() {
             onChange={e => setTipoVisita(e.target.value as TipoVisita)}
           />
           <Area etiqueta="Qué se hizo" value={resumen} onChange={e => setResumen(e.target.value)} />
-          <Boton variante="acento" className="w-full" onClick={guardarVisita}>Guardar</Boton>
+          <div className="grid grid-cols-2 gap-2">
+            <Boton onClick={() => setHoja(null)}>Cancelar</Boton>
+            <Boton variante="acento" onClick={guardarVisita}>Guardar</Boton>
+          </div>
         </div>
       </Hoja>
     </Pantalla>

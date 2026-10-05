@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Boton, Campo, Cargando, Hoja, Pantalla, Tarjeta, Vacio } from '../componentes/ui'
+import { Boton, Campo, Cargando, Confirmar, Hoja, Pantalla, Tarjeta, Vacio } from '../componentes/ui'
 import { IconoAgregar } from '../componentes/iconos'
 import { borrarTarea, consultarTareas, crearTarea, guardarTarea, useConsulta } from '../lib/datos'
 import { hoyIso, vencimiento } from '../lib/formato'
@@ -8,6 +8,7 @@ import type { Tarea } from '../lib/tipos'
 export function Tareas() {
   const [verHechas, setVerHechas] = useState(false)
   const [abierta, setAbierta] = useState(false)
+  const [borrando, setBorrando] = useState<Tarea | null>(null)
   const [titulo, setTitulo] = useState('')
   const [vence, setVence] = useState(hoyIso())
   const { datos, cargando, recargar } = useConsulta<Tarea[]>(() => consultarTareas(!verHechas), [verHechas])
@@ -75,10 +76,7 @@ export function Tareas() {
                     )}
                   </div>
                   <button
-                    onClick={async () => {
-                      await borrarTarea(t.id)
-                      void recargar()
-                    }}
+                    onClick={() => setBorrando(t)}
                     className="shrink-0 text-xs text-faint active:text-rojo"
                   >
                     borrar
@@ -90,6 +88,19 @@ export function Tareas() {
         </ul>
       )}
 
+      <Confirmar
+        abierta={borrando !== null}
+        titulo="¿Borrar el pendiente?"
+        detalle={borrando?.titulo}
+        textoAceptar="Borrar"
+        peligro
+        alCerrar={() => setBorrando(null)}
+        alAceptar={async () => {
+          if (borrando) await borrarTarea(borrando.id)
+          void recargar()
+        }}
+      />
+
       <Hoja abierta={abierta} titulo="Nuevo pendiente" alCerrar={() => setAbierta(false)}>
         <div className="space-y-3">
           <Campo
@@ -100,9 +111,10 @@ export function Tareas() {
             placeholder="Volver a Minimarket Las Flores"
           />
           <Campo etiqueta="Para cuándo" type="date" value={vence} onChange={e => setVence(e.target.value)} />
-          <Boton variante="acento" className="w-full" onClick={agregar}>
-            Guardar
-          </Boton>
+          <div className="grid grid-cols-2 gap-2">
+            <Boton onClick={() => setAbierta(false)}>Cancelar</Boton>
+            <Boton variante="acento" onClick={agregar}>Guardar</Boton>
+          </div>
         </div>
       </Hoja>
     </Pantalla>

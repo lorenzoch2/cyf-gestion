@@ -68,9 +68,10 @@ export function Clientes() {
           <Campo etiqueta="Nombre" autoFocus value={nombre} onChange={e => setNombre(e.target.value)} />
           <Campo etiqueta="Dirección" value={direccion} onChange={e => setDireccion(e.target.value)} />
           <Campo etiqueta="Teléfono" inputMode="tel" value={telefono} onChange={e => setTelefono(e.target.value)} />
-          <Boton variante="acento" className="w-full" onClick={agregar}>
-            Guardar
-          </Boton>
+          <div className="grid grid-cols-2 gap-2">
+            <Boton onClick={() => setAbierta(false)}>Cancelar</Boton>
+            <Boton variante="acento" onClick={agregar}>Guardar</Boton>
+          </div>
         </div>
       </Hoja>
     </Pantalla>

@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { db } from './supabase'
 import type {
-  Cliente, Contrato, Equipo, LineaPresupuesto, Oportunidad, Presupuesto, Prospecto,
-  Servicio, Tarea, Visita,
+  Cliente, Contrato, Equipo, LineaPresupuesto, Oportunidad, PrecioTarifario, Presupuesto,
+  Prospecto, Ruta, Servicio, Tarea, Tarifario, Visita,
 } from './tipos'
 
 /*
@@ -36,14 +36,34 @@ export function useConsulta<T>(consulta: () => PromiseLike<{ data: T | null; err
 
 /* ── Prospectos ─────────────────────────────────────────────────────────── */
 
-export function consultarProspectos(filtros: { zona?: string; estado?: string; prioridad?: string; busqueda?: string }) {
+export interface FiltrosProspecto {
+  zona?: string
+  estados?: string[]
+  prioridad?: string
+  rutaId?: string
+  sinRuta?: boolean
+  busqueda?: string
+}
+
+export function consultarProspectos(filtros: FiltrosProspecto) {
   let q = db().from('prospectos').select('*')
   if (filtros.zona) q = q.eq('zona', filtros.zona)
-  if (filtros.estado) q = q.eq('estado', filtros.estado)
+  if (filtros.estados?.length) q = q.in('estado', filtros.estados)
   if (filtros.prioridad) q = q.eq('prioridad', filtros.prioridad)
-  if (filtros.busqueda) q = q.ilike('nombre', `%${filtros.busqueda}%`)
-  return q.order('prioridad').order('direccion', { nullsFirst: false }).order('nombre').limit(400)
+  if (filtros.rutaId) q = q.eq('ruta_id', filtros.rutaId)
+  if (filtros.sinRuta) q = q.is('ruta_id', null)
+  // El buscador mira nombre y dirección: en la calle uno busca por cualquiera.
+  if (filtros.busqueda) {
+    const t = filtros.busqueda.replace(/[%,]/g, ' ')
+    q = q.or(`nombre.ilike.%${t}%,direccion.ilike.%${t}%,rubro.ilike.%${t}%`)
+  }
+  return q.order('prioridad').order('direccion', { nullsFirst: false }).order('nombre').limit(500)
 }
+
+export const crearProspecto = (prospecto: Partial<Prospecto>) =>
+  db().from('prospectos').insert({ ...prospecto, origen: 'manual' }).select().single()
+
+export const borrarProspecto = (id: string) => db().from('prospectos').delete().eq('id', id)
 
 export const consultarProspecto = (id: string) =>
   db().from('prospectos').select('*').eq('id', id).single()
@@ -196,4 +216,91 @@ export async function consultarResumen() {
   }
 }
 
-export type { Cliente, Contrato, Equipo, LineaPresupuesto, Oportunidad, Presupuesto, Prospecto, Servicio, Tarea, Visita }
+/* ── Rutas de visita ────────────────────────────────────────────────────── */
+
+export const consultarRutas = () =>
+  db().from('rutas').select('*').order('fecha', { ascending: false, nullsFirst: false }).limit(100)
+
+export const crearRuta = (ruta: Partial<Ruta>) => db().from('rutas').insert(ruta).select().single()
+
+export const guardarRuta = (id: string, cambios: Partial<Ruta>) =>
+  db().from('rutas').update(cambios).eq('id', id)
+
+export const borrarRuta = (id: string) => db().from('rutas').delete().eq('id', id)
+
+/** Cuántos locales tiene cada ruta y cuántos siguen por visitar. */
+export async function resumenRutas(): Promise<Record<string, { total: number; porVisitar: number }>> {
+  const { data } = await db().from('prospectos').select('ruta_id, estado').not('ruta_id', 'is', null)
+  const cuenta: Record<string, { total: number; porVisitar: number }> = {}
+  for (const fila of (data ?? []) as { ruta_id: string; estado: string }[]) {
+    const r = (cuenta[fila.ruta_id] ??= { total: 0, porVisitar: 0 })
+    r.total += 1
+    if (fila.estado === 'por_visitar') r.porVisitar += 1
+  }
+  return cuenta
+}
+
+/* ── Tarifarios ─────────────────────────────────────────────────────────── */
+
+export const consultarTarifarios = () =>
+  db().from('tarifarios').select('*').eq('activo', true).order('tipo').order('nombre')
+
+export const crearTarifario = (tarifario: Partial<Tarifario>) =>
+  db().from('tarifarios').insert(tarifario).select().single()
+
+export const guardarTarifario = (id: string, cambios: Partial<Tarifario>) =>
+  db().from('tarifarios').update(cambios).eq('id', id)
+
+export const borrarTarifario = (id: string) => db().from('tarifarios').delete().eq('id', id)
+
+export const consultarPrecios = (tarifarioId: string) =>
+  db().from('tarifario_precios').select('*').eq('tarifario_id', tarifarioId)
+
+/** Fija el precio de un servicio en un tarifario; si ya existía, lo reemplaza. */
+export const fijarPrecio = (tarifarioId: string, servicioId: string, precioNeto: number) =>
+  db()
+    .from('tarifario_precios')
+    .upsert({ tarifario_id: tarifarioId, servicio_id: servicioId, precio_neto: precioNeto },
+            { onConflict: 'tarifario_id,servicio_id' })
+
+/** Saca un servicio de un tarifario: vuelve a regir el precio base. */
+export const quitarPrecio = (tarifarioId: string, servicioId: string) =>
+  db().from('tarifario_precios').delete().eq('tarifario_id', tarifarioId).eq('servicio_id', servicioId)
+
+export const crearServicio = (servicio: Partial<Servicio>) =>
+  db().from('servicios').insert(servicio).select().single()
+
+export const borrarServicio = (id: string) =>
+  db().from('servicios').update({ activo: false }).eq('id', id)
+
+/**
+ * Qué tarifario le toca a un cliente: el suyo, el de su zona, o el general.
+ * Devuelve también los precios ya resueltos, listos para armar un presupuesto.
+ */
+export async function tarifarioQueAplica(clienteId?: string | null, zona?: string | null) {
+  const { data } = await db().from('tarifarios').select('*').eq('activo', true)
+  const tarifarios = (data ?? []) as Tarifario[]
+  const elegido =
+    (clienteId ? tarifarios.find(t => t.tipo === 'cliente' && t.cliente_id === clienteId) : undefined) ??
+    (zona ? tarifarios.find(t => t.tipo === 'zona' && t.zona === zona) : undefined) ??
+    tarifarios.find(t => t.tipo === 'base')
+  if (!elegido) return { tarifario: null, precios: {} as Record<string, number> }
+
+  const base = tarifarios.find(t => t.tipo === 'base')
+  const ids = [base?.id, elegido.id].filter(Boolean) as string[]
+  const { data: filas } = await db().from('tarifario_precios').select('*').in('tarifario_id', ids)
+
+  // Primero el base, encima el elegido: lo específico pisa lo general.
+  const precios: Record<string, number> = {}
+  for (const id of ids) {
+    for (const f of (filas ?? []) as PrecioTarifario[]) {
+      if (f.tarifario_id === id) precios[f.servicio_id] = f.precio_neto
+    }
+  }
+  return { tarifario: elegido, precios }
+}
+
+export type {
+  Cliente, Contrato, Equipo, LineaPresupuesto, Oportunidad, PrecioTarifario, Presupuesto,
+  Prospecto, Ruta, Servicio, Tarea, Tarifario, Visita,
+}

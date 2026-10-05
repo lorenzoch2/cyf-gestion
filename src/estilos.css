@@ -20,6 +20,10 @@
   --color-linea-2: #ccd3dd;
   --color-verde: #2f7d58;
   --color-rojo: #b3261e;
+  /* Colores de estado de gestión: tienen que distinguirse de un vistazo,
+     en la lista y en el mapa. */
+  --color-morado: #6b4fa8;
+  --color-naranja: #c2560f;
 
   --font-sans: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;

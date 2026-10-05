@@ -13,6 +13,7 @@ import { ClienteDetalle } from './paginas/ClienteDetalle'
 import { Negocios } from './paginas/Negocios'
 import { Tareas } from './paginas/Tareas'
 import { Tarifario } from './paginas/Tarifario'
+import { Rutas } from './paginas/Rutas'
 import { Presupuestos } from './paginas/Presupuestos'
 import { PresupuestoDetalle } from './paginas/PresupuestoDetalle'
 import { Mas } from './paginas/Mas'
@@ -34,6 +35,7 @@ export function App() {
         <Route path="/clientes/:id" element={<ClienteDetalle />} />
         <Route path="/negocios" element={<Negocios />} />
         <Route path="/tareas" element={<Tareas />} />
+        <Route path="/rutas" element={<Rutas />} />
         <Route path="/tarifario" element={<Tarifario />} />
         <Route path="/presupuestos" element={<Presupuestos />} />
         <Route path="/presupuestos/:id" element={<PresupuestoDetalle />} />
