@@ -2,6 +2,11 @@
 
 export const IVA = 0.19
 
+/** «1 local» y «2 locales»: el contador no debe sonar a robot. */
+export function plural(n: number, singular: string, plural: string): string {
+  return `${n} ${n === 1 ? singular : plural}`
+}
+
 export function clp(valor: number | null | undefined): string {
   if (valor === null || valor === undefined) return '—'
   return '$' + Math.round(valor).toLocaleString('es-CL')

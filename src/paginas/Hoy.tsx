@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Cargando, Etiqueta, Pantalla, Tarjeta, Vacio } from '../componentes/ui'
 import { consultarResumen, consultarTareas, guardarTarea, useConsulta } from '../lib/datos'
-import { clp, fechaCorta, hoyIso, vencimiento } from '../lib/formato'
+import { clp, fechaCorta, hoyIso, plural, vencimiento } from '../lib/formato'
 import { ETAPAS } from '../lib/tipos'
 import { db } from '../lib/supabase'
 import type { Oportunidad, Prospecto, Tarea } from '../lib/tipos'
@@ -50,7 +50,9 @@ export function Hoy() {
           <Link to="/prospectos">
             <Tarjeta className="h-full">
               <p className="font-mono text-2xl font-medium">{r.porVisitar}</p>
-              <p className="mt-1 text-sm text-mut">locales por visitar</p>
+              <p className="mt-1 text-sm text-mut">
+                {r.porVisitar === 1 ? 'local por visitar' : 'locales por visitar'}
+              </p>
               {r.visitadosHoy > 0 && (
                 <p className="mt-2 text-xs text-verde">{r.visitadosHoy} visitados hoy</p>
               )}
@@ -59,7 +61,9 @@ export function Hoy() {
           <Link to="/negocios">
             <Tarjeta className="h-full">
               <p className="font-mono text-2xl font-medium">{clp(r.montoEnJuego)}</p>
-              <p className="mt-1 text-sm text-mut">en {r.oportunidadesAbiertas} negocios abiertos</p>
+              <p className="mt-1 text-sm text-mut">
+                en {plural(r.oportunidadesAbiertas, 'negocio abierto', 'negocios abiertos')}
+              </p>
             </Tarjeta>
           </Link>
         </div>

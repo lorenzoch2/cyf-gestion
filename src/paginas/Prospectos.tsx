@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Buscador, Cargando, Etiqueta, Pantalla, Tarjeta, Vacio } from '../componentes/ui'
 import { consultarProspectos, useConsulta } from '../lib/datos'
+import { plural } from '../lib/formato'
 import { ESTADOS_PROSPECTO, ZONAS, type Prospecto } from '../lib/tipos'
 
 const FILTROS_ZONA: [string, string][] = [['', 'Todas'], ...Object.entries(ZONAS)]
@@ -25,7 +26,7 @@ export function Prospectos() {
   const lista = datos ?? []
 
   return (
-    <Pantalla titulo="Prospectos" bajada={cargando ? undefined : `${lista.length} locales en la lista`}>
+    <Pantalla titulo="Prospectos" bajada={cargando ? undefined : `${plural(lista.length, 'local', 'locales')} en la lista`}>
       <Buscador valor={busqueda} alCambiar={setBusqueda} marcador="Buscar local" />
 
       <div className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1">
