@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import {
-  Boton, Buscador, Campo, Cargando, Hoja, Pantalla, Selector, Tarjeta, Vacio,
+  Aviso, Boton, Buscador, Campo, Cargando, Hoja, Pantalla, Selector, Tarjeta, Vacio,
 } from '../componentes/ui'
+import { RegistroRapido, type Deshacer } from '../componentes/RegistroRapido'
 import { IconoAgregar } from '../componentes/iconos'
 import { consultarProspectos, consultarRutas, crearProspecto, useConsulta } from '../lib/datos'
 import { plural } from '../lib/formato'
@@ -21,6 +22,8 @@ export function Prospectos() {
   const [ruta, setRuta] = useState(rutaInicial)
   const [busqueda, setBusqueda] = useState('')
   const [abierta, setAbierta] = useState(false)
+  const [registrando, setRegistrando] = useState<Prospecto | null>(null)
+  const [aviso, setAviso] = useState<Deshacer | null>(null)
 
   const rutas = useConsulta<Ruta[]>(() => consultarRutas(), [])
   const { datos, cargando, recargar } = useConsulta<Prospecto[]>(
@@ -156,8 +159,8 @@ export function Prospectos() {
               const pinta = ESTADOS_PROSPECTO[p.estado]
               return (
                 <li key={p.id}>
-                  <Link to={`/prospectos/${p.id}`}>
-                    <Tarjeta className={`border-l-4 p-3 ${pinta.borde}`}>
+                  <Tarjeta className={`border-l-4 p-3 ${pinta.borde}`}>
+                    <Link to={`/prospectos/${p.id}`} className="block">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <p className="truncate font-medium">{p.nombre}</p>
@@ -170,19 +173,47 @@ export function Prospectos() {
                           {pinta.corta}
                         </span>
                       </div>
-                      <div className="mt-1.5 flex items-center gap-2 text-xs text-faint">
-                        <span>{ZONAS[p.zona ?? ''] ?? p.zona ?? 'Sin zona'}</span>
+                    </Link>
+                    <div className="mt-2 flex items-center justify-between gap-2">
+                      <span className="flex min-w-0 items-center gap-2 truncate text-xs text-faint">
+                        {ZONAS[p.zona ?? ''] ?? p.zona ?? 'Sin zona'}
                         {p.prioridad === 'alta' && <span className="text-laton-dk">prioridad alta</span>}
                         {p.origen === 'manual' && <span>agregado a mano</span>}
-                      </div>
-                    </Tarjeta>
-                  </Link>
+                      </span>
+                      <button
+                        onClick={() => setRegistrando(p)}
+                        className="shrink-0 rounded-lg border border-linea-2 px-2.5 py-1 text-xs font-medium text-acero-dk active:bg-tinte"
+                      >
+                        Registrar
+                      </button>
+                    </div>
+                  </Tarjeta>
                 </li>
               )
             })}
           </ul>
         )}
       </div>
+
+      <RegistroRapido
+        prospecto={registrando}
+        alCerrar={() => setRegistrando(null)}
+        alGuardar={d => {
+          setAviso(d)
+          void recargar()
+        }}
+      />
+
+      {aviso && (
+        <Aviso
+          mensaje={aviso.mensaje}
+          accion={async () => {
+            await aviso.revertir()
+            void recargar()
+          }}
+          alCerrar={() => setAviso(null)}
+        />
+      )}
 
       <Hoja abierta={abierta} titulo="Agregar local" alCerrar={() => setAbierta(false)}>
         <div className="space-y-3">

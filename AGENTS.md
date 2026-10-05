@@ -48,6 +48,10 @@ src/
 - **Mobile-first de verdad.** Barra de navegación abajo (ahí llega el pulgar), hojas que suben desde
   el borde inferior, campos de 16 px —bajo eso iOS hace zoom al enfocar— y `env(safe-area-inset-*)`
   para la barra de gestos.
+- **El registro rápido guarda al toque, y por eso existe «Deshacer».** En la lista y en el mapa,
+  tocar un resultado escribe la visita y mueve el estado de gestión sin pasos intermedios: es el
+  gesto que se hace caminando. El seguro no es una confirmación previa sino el aviso con
+  «Deshacer», que revierte el estado y borra la visita. Ver `RegistroRapido` y `Aviso`.
 - **Nada se guarda sin confirmar.** Abrir una hoja y cerrarla no escribe nada: toda hoja tiene
   «Cancelar» junto a «Guardar», y lo que no se puede deshacer pasa por `Confirmar`. Es una app
   que se usa caminando: un toque en la pantalla equivocada no puede costar un registro. La

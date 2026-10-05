@@ -282,6 +282,49 @@ export function Confirmar({
   )
 }
 
+/**
+ * Aviso al pie, sobre la barra de navegación.
+ *
+ * Lleva una acción opcional —«Deshacer»— porque en la calle se registra con el
+ * pulgar y a veces en el local equivocado. Doce segundos: lo que toma darse
+ * cuenta, mirar la pantalla y alcanzar a tocar.
+ */
+export function Aviso({
+  mensaje,
+  accion,
+  textoAccion = 'Deshacer',
+  alCerrar,
+}: {
+  mensaje: string
+  accion?: () => void
+  textoAccion?: string
+  alCerrar: () => void
+}) {
+  useEffect(() => {
+    const t = setTimeout(alCerrar, 12000)
+    return () => clearTimeout(t)
+  }, [mensaje, alCerrar])
+
+  return (
+    <div className="fixed inset-x-0 bottom-[4.5rem] z-40 flex justify-center px-4">
+      <div className="flex w-full max-w-md items-center gap-3 rounded-xl bg-grafito px-4 py-3 text-papel shadow-lg">
+        <span className="min-w-0 flex-1 text-sm">{mensaje}</span>
+        {accion && (
+          <button
+            onClick={() => {
+              accion()
+              alCerrar()
+            }}
+            className="shrink-0 text-sm font-semibold text-laton-lt"
+          >
+            {textoAccion}
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export function Dato({ etiqueta, children }: { etiqueta: string; children: ReactNode }) {
   return (
     <div className="flex items-baseline justify-between gap-4 border-b border-linea py-2 last:border-0">

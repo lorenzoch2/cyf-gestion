@@ -3,7 +3,8 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { CircleMarker, MapContainer, Marker, Polyline, Popup, TileLayer, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { Boton, Campo, Cargando, Hoja, Selector } from '../componentes/ui'
+import { Aviso, Boton, Campo, Cargando, Hoja, Selector } from '../componentes/ui'
+import { RegistroRapido, type Deshacer } from '../componentes/RegistroRapido'
 import { IconoVolver } from '../componentes/iconos'
 import {
   asignarRuta, consultarProspectos, consultarRutas, crearRuta, useConsulta,
@@ -92,6 +93,8 @@ export function Mapa() {
   const [ruta, setRuta] = useState(parametros.get('ruta') ?? '')
   const [recorrido, setRecorrido] = useState<Prospecto[] | null>(null)
   const [hoja, setHoja] = useState<'planificar' | 'guardar' | null>(null)
+  const [registrando, setRegistrando] = useState<Prospecto | null>(null)
+  const [aviso, setAviso] = useState<Deshacer | null>(null)
   const [nombreRuta, setNombreRuta] = useState('')
   const [fechaRuta, setFechaRuta] = useState(hoyIso())
 
@@ -278,7 +281,13 @@ export function Mapa() {
                       <p className="mt-1 text-xs" style={{ color: COLOR_ESTADO[p.estado] }}>
                         {ESTADOS_PROSPECTO[p.estado].etiqueta}
                       </p>
-                      <div className="mt-2 flex gap-2">
+                      <button
+                        onClick={() => setRegistrando(p)}
+                        className="mt-2 w-full rounded-lg bg-laton px-3 py-1.5 text-xs font-semibold text-grafito"
+                      >
+                        Registrar visita
+                      </button>
+                      <div className="mt-2 flex gap-3">
                         <Link to={`/prospectos/${p.id}`} className="text-xs font-medium text-acero-dk">
                           Ver ficha
                         </Link>
@@ -305,6 +314,26 @@ export function Mapa() {
           </Boton>
         </div>
       </div>
+
+      <RegistroRapido
+        prospecto={registrando}
+        alCerrar={() => setRegistrando(null)}
+        alGuardar={d => {
+          setAviso(d)
+          void recargar()
+        }}
+      />
+
+      {aviso && (
+        <Aviso
+          mensaje={aviso.mensaje}
+          accion={async () => {
+            await aviso.revertir()
+            void recargar()
+          }}
+          alCerrar={() => setAviso(null)}
+        />
+      )}
 
       <Hoja abierta={hoja === 'planificar'} titulo="Recorrido" alCerrar={() => setHoja(null)}>
         <div className="space-y-3">

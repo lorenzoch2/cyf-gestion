@@ -109,7 +109,10 @@ export const consultarVisitas = (filtro: { clienteId?: string; prospectoId?: str
   return q.order('fecha', { ascending: false }).limit(50)
 }
 
-export const crearVisita = (visita: Partial<Visita>) => db().from('visitas').insert(visita)
+export const crearVisita = (visita: Partial<Visita>) =>
+  db().from('visitas').insert(visita).select().single()
+
+export const borrarVisita = (id: string) => db().from('visitas').delete().eq('id', id)
 
 /* ── Oportunidades ──────────────────────────────────────────────────────── */
 
