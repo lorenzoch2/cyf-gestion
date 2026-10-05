@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { CircleMarker, MapContainer, Polyline, Popup, TileLayer, useMap } from 'react-leaflet'
+import { CircleMarker, MapContainer, Marker, Polyline, Popup, TileLayer, useMap } from 'react-leaflet'
+import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { Boton, Campo, Cargando, Hoja, Selector } from '../componentes/ui'
 import { IconoVolver } from '../componentes/iconos'
@@ -15,6 +16,19 @@ import {
 
 /** Centro de la campaña: entre Plaza Ñuñoa y Plaza Egaña. */
 const CENTRO: [number, number] = [-33.4558, -70.5888]
+
+/** Número de parada, dibujado sobre el punto. */
+function iconoParada(numero: number) {
+  return L.divIcon({
+    className: '',
+    html:
+      `<div style="width:22px;height:22px;border-radius:999px;background:#14181f;color:#f8f7f4;` +
+      `font:600 11px/22px 'IBM Plex Mono',monospace;text-align:center;` +
+      `box-shadow:0 0 0 2px #f8f7f4">${numero}</div>`,
+    iconSize: [22, 22],
+    iconAnchor: [11, 11],
+  })
+}
 
 /** Distancia aproximada en metros. A esta escala, el plano basta. */
 function distancia(a: [number, number], b: [number, number]): number {
@@ -228,6 +242,15 @@ export function Mapa() {
                 pathOptions={{ color: '#14181f', weight: 2, dashArray: '6 6', opacity: 0.6 }}
               />
             )}
+
+            {recorrido?.slice(0, 20).map((p, i) => (
+              <Marker
+                key={'parada-' + p.id}
+                position={[p.lat!, p.lng!]}
+                icon={iconoParada(i + 1)}
+                interactive={false}
+              />
+            ))}
 
             {conMapa.map(p => {
               const posicion = recorrido ? recorrido.findIndex(x => x.id === p.id) + 1 : 0

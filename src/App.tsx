@@ -1,3 +1,4 @@
+import { Suspense, lazy } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import { Navegacion } from './componentes/Navegacion'
 import { Cargando } from './componentes/ui'
@@ -14,10 +15,15 @@ import { Negocios } from './paginas/Negocios'
 import { Tareas } from './paginas/Tareas'
 import { Tarifario } from './paginas/Tarifario'
 import { Rutas } from './paginas/Rutas'
-import { Mapa } from './paginas/Mapa'
 import { Presupuestos } from './paginas/Presupuestos'
 import { PresupuestoDetalle } from './paginas/PresupuestoDetalle'
 import { Mas } from './paginas/Mas'
+
+/*
+  El mapa arrastra Leaflet: unos 150 KB que no tienen por qué viajar cuando
+  se abre la app para mirar un pendiente. Se carga al entrar a la pantalla.
+*/
+const Mapa = lazy(() => import('./paginas/Mapa').then(m => ({ default: m.Mapa })))
 
 export function App() {
   const { sesion, cargando } = useSesion()
@@ -37,7 +43,14 @@ export function App() {
         <Route path="/negocios" element={<Negocios />} />
         <Route path="/tareas" element={<Tareas />} />
         <Route path="/rutas" element={<Rutas />} />
-        <Route path="/mapa" element={<Mapa />} />
+        <Route
+          path="/mapa"
+          element={
+            <Suspense fallback={<Cargando />}>
+              <Mapa />
+            </Suspense>
+          }
+        />
         <Route path="/tarifario" element={<Tarifario />} />
         <Route path="/presupuestos" element={<Presupuestos />} />
         <Route path="/presupuestos/:id" element={<PresupuestoDetalle />} />
