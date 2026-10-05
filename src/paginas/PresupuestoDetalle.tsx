@@ -4,14 +4,19 @@ import {
   Boton, Campo, Cargando, Confirmar, Dato, Error, Hoja, Pantalla, Selector, Tarjeta, Vacio,
 } from '../componentes/ui'
 import {
-  borrarLinea, borrarPresupuesto, consultarLineas, consultarPresupuesto, consultarServicios,
-  crearLinea, guardarPresupuesto, tarifarioQueAplica, useConsulta,
+  borrarLinea, borrarPresupuesto, consultarCliente, consultarLineas, consultarPresupuesto,
+  consultarProspecto, consultarServicios, crearLinea, guardarPresupuesto, tarifarioQueAplica,
+  useConsulta,
 } from '../lib/datos'
 import { clp, conIva, fechaCorta } from '../lib/formato'
 import {
   CATEGORIAS, ESTADOS_PRESUPUESTO,
-  type EstadoPresupuesto, type LineaPresupuesto, type Presupuesto, type Servicio,
+  type Cliente, type EstadoPresupuesto, type LineaPresupuesto, type Presupuesto,
+  type Prospecto, type Servicio,
 } from '../lib/tipos'
+
+/** Un id que no existe: deja la consulta vacía cuando no hay a quién buscar. */
+const NINGUNO = '00000000-0000-0000-0000-000000000000'
 
 export function PresupuestoDetalle() {
   const { id = '' } = useParams()
@@ -24,6 +29,10 @@ export function PresupuestoDetalle() {
     [p?.cliente_id],
   )
 
+  const cliente = useConsulta<Cliente>(() => consultarCliente(p?.cliente_id ?? NINGUNO), [p?.cliente_id])
+  const prospecto = useConsulta<Prospecto>(() => consultarProspecto(p?.prospecto_id ?? NINGUNO), [p?.prospecto_id])
+
+  const [generando, setGenerando] = useState(false)
   const [hoja, setHoja] = useState<'linea' | 'ajustes' | null>(null)
   const [confirmando, setConfirmando] = useState<'presupuesto' | LineaPresupuesto | null>(null)
 
@@ -91,6 +100,21 @@ export function PresupuestoDetalle() {
     void recargar()
   }
 
+  async function enviarPdf() {
+    if (!p) return
+    setGenerando(true)
+    // El módulo del PDF arrastra jsPDF y las tipografías: se carga al pedirlo.
+    const { generarPresupuestoPdf, compartirPdf } = await import('../lib/pdf')
+    const blob = await generarPresupuestoPdf({
+      presupuesto: p,
+      lineas: items,
+      cliente: cliente.datos,
+      prospecto: prospecto.datos,
+    })
+    await compartirPdf(blob, `Presupuesto ${p.numero ?? ''} — Calor y Frío Industrial.pdf`)
+    setGenerando(false)
+  }
+
   function compartir() {
     const texto = [
       `*Calor y Frío Industrial* — Presupuesto ${p?.numero ?? ''}`,
@@ -126,6 +150,9 @@ export function PresupuestoDetalle() {
         <Dato etiqueta="Estado">{ESTADOS_PRESUPUESTO[p.estado]}</Dato>
         <Dato etiqueta="Descuento">{p.descuento_pct}%</Dato>
         {tarifa.datos?.tarifario && <Dato etiqueta="Tarifario">{tarifa.datos.tarifario.nombre}</Dato>}
+        <Dato etiqueta="Para">
+          {cliente.datos?.nombre ?? prospecto.datos?.nombre ?? 'Sin cliente asignado'}
+        </Dato>
       </Tarjeta>
 
       <section className="mt-4">
@@ -181,9 +208,14 @@ export function PresupuestoDetalle() {
       </Tarjeta>
 
       <div className="mt-4 grid grid-cols-2 gap-2">
-        <Boton variante="acento" onClick={compartir}>Compartir</Boton>
-        <Boton variante="peligro" onClick={() => setConfirmando('presupuesto')}>Borrar</Boton>
+        <Boton variante="acento" onClick={enviarPdf} disabled={generando || items.length === 0}>
+          {generando ? 'Armando PDF…' : 'Enviar PDF'}
+        </Boton>
+        <Boton onClick={compartir}>Texto por WhatsApp</Boton>
       </div>
+      <Boton variante="peligro" className="mt-2 w-full" onClick={() => setConfirmando('presupuesto')}>
+        Borrar presupuesto
+      </Boton>
 
       <Hoja abierta={hoja === 'linea'} titulo="Agregar línea" alCerrar={() => setHoja(null)}>
         <div className="space-y-3">

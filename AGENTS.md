@@ -32,6 +32,7 @@ src/
     datos.ts            # una función por consulta + el hook useConsulta
     tipos.ts            # filas de la base y etiquetas para mostrar
     formato.ts          # pesos, fechas, enlaces de teléfono y mapa
+    pdf.ts              # el presupuesto en PDF, compuesto en el navegador
   componentes/          # ui.tsx (piezas), Navegacion.tsx, iconos.tsx
   paginas/              # una por pantalla
 ```
@@ -56,6 +57,12 @@ src/
   «Cancelar» junto a «Guardar», y lo que no se puede deshacer pasa por `Confirmar`. Es una app
   que se usa caminando: un toque en la pantalla equivocada no puede costar un registro. La
   excepción deliberada son las pastillas de estado de gestión, donde el toque **es** la acción.
+- **El PDF se compone en el teléfono, no en un servidor.** `pdf.ts` arma el documento con jsPDF,
+  con las tipografías de la marca incrustadas y el logotipo como imagen, y lo entrega por el menú
+  de compartir del sistema. Dos cuidados que costaron encontrar: `compress: true` en el
+  constructor —sin eso la imagen entra como mapa de bits crudo y el archivo pesa 1,6 MB en vez
+  de 54 KB— y el módulo se importa sólo al pedir el PDF, porque jsPDF más las fuentes son
+  130 KB comprimidos que nadie necesita para ver un pendiente.
 - **Un precio se resuelve en cascada**: tarifario del cliente → de su zona → general. Un
   tarifario especial sólo guarda lo que de verdad cambia; el resto lo hereda. Esa lógica vive en
   `tarifarioQueAplica()` y no debe duplicarse en las pantallas.

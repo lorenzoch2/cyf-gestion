@@ -17,7 +17,7 @@ No es el sitio público — ese vive en
 | **Rutas** | Los locales que se caminan en una tarde, con cuántos faltan por visitar |
 | **Pendientes** | Tareas con fecha de vencimiento |
 | **Tarifario** | Precios por equipo, netos y con IVA. Uno general y los que se quieran por zona o por cliente |
-| **Presupuestos** | Armar una cotización desde el tarifario y mandarla por WhatsApp |
+| **Presupuestos** | Armar una cotización desde el tarifario y mandarla en PDF con la marca, o como texto por WhatsApp |
 
 ## Montar el proyecto
 
