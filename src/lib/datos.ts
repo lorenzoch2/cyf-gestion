@@ -240,6 +240,10 @@ export async function resumenRutas(): Promise<Record<string, { total: number; po
   return cuenta
 }
 
+/** Mete un puñado de locales en una ruta de una sola vez. */
+export const asignarRuta = (ids: string[], rutaId: string | null) =>
+  db().from('prospectos').update({ ruta_id: rutaId }).in('id', ids)
+
 /* ── Tarifarios ─────────────────────────────────────────────────────────── */
 
 export const consultarTarifarios = () =>

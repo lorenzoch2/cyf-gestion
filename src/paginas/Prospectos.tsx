@@ -74,9 +74,14 @@ export function Prospectos() {
       titulo="Prospectos"
       bajada={cargando ? undefined : `${plural(lista.length, 'local', 'locales')} en la lista`}
       accion={
-        <Boton variante="acento" onClick={() => setAbierta(true)} aria-label="Agregar local">
-          <IconoAgregar />
-        </Boton>
+        <div className="flex gap-2">
+          <Link to="/mapa">
+            <Boton className="min-h-9 px-3 text-sm">Mapa</Boton>
+          </Link>
+          <Boton variante="acento" onClick={() => setAbierta(true)} aria-label="Agregar local">
+            <IconoAgregar />
+          </Boton>
+        </div>
       }
     >
       <Buscador valor={busqueda} alCambiar={setBusqueda} marcador="Nombre, dirección o rubro" />

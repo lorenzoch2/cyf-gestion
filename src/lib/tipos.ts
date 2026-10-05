@@ -231,6 +231,22 @@ export const ESTADOS_PROSPECTO: Record<EstadoProspecto, PintaEstado> = {
   },
 }
 
+/**
+ * El mismo color, en hexadecimal, para el mapa.
+ *
+ * Leaflet pinta con valores, no con clases de Tailwind, así que la paleta de
+ * estados vive dos veces. Si cambia uno, cambia el otro.
+ */
+export const COLOR_ESTADO: Record<EstadoProspecto, string> = {
+  por_visitar: '#838c99',
+  visitado: '#4f73a8',
+  interesado: '#a9803f',
+  evaluacion: '#6b4fa8',
+  cotizado: '#c2560f',
+  cliente: '#2f7d58',
+  descartado: '#ccd3dd',
+}
+
 /** El orden en que se muestran: sigue el avance de la conversación. */
 export const ORDEN_ESTADOS: EstadoProspecto[] = [
   'por_visitar', 'visitado', 'interesado', 'evaluacion', 'cotizado', 'cliente', 'descartado',
