@@ -1,0 +1,62 @@
+@import 'tailwindcss';
+
+/*
+  Paleta de la marca: latón y acero sobre grafito y papel. Las mismas reglas de
+  contraste del manual: el latón como texto sobre fondo claro va en su versión
+  oscura, el acero es estructura y el latón es acción.
+*/
+@theme {
+  --color-laton: #a9803f;
+  --color-laton-dk: #8a6730;
+  --color-laton-lt: #c49c58;
+  --color-acero: #4f73a8;
+  --color-acero-dk: #3a5880;
+  --color-grafito: #14181f;
+  --color-mut: #59626f;
+  --color-faint: #838c99;
+  --color-papel: #f8f7f4;
+  --color-tinte: #eef1f6;
+  --color-linea: #e0e4ea;
+  --color-linea-2: #ccd3dd;
+  --color-verde: #2f7d58;
+  --color-rojo: #b3261e;
+
+  --font-sans: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+html {
+  background: var(--color-papel);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--color-grafito);
+  /* El teclado del celular no debe empujar el diseño. */
+  overscroll-behavior-y: none;
+}
+
+/* El área segura del teléfono: barra de gestos abajo, notch arriba. */
+.bajo-seguro {
+  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+}
+.sobre-seguro {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* Campos: 16px mínimo, porque bajo eso iOS hace zoom al enfocar. */
+input,
+select,
+textarea {
+  font-size: 16px;
+  font-family: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
