@@ -1,13 +1,13 @@
 import { useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import {
   Area, Boton, Campo, Cargando, Confirmar, Dato, Error, Etiqueta, Hoja, Pantalla, Selector,
   Tarjeta, Vacio,
 } from '../componentes/ui'
 import { IconoPin, IconoTelefono, IconoWhatsapp } from '../componentes/iconos'
 import {
-  borrarEquipo, consultarCliente, consultarContratos, consultarEquipos, consultarVisitas,
-  crearContrato, crearEquipo, crearVisita, useConsulta,
+  borrarCliente, borrarEquipo, consultarCliente, consultarContratos, consultarEquipos,
+  consultarVisitas, crearContrato, crearEquipo, crearVisita, useConsulta,
 } from '../lib/datos'
 import { clp, enlaceLlamada, enlaceMapa, enlaceWhatsapp, fechaCorta, hoyIso } from '../lib/formato'
 import {
@@ -17,6 +17,8 @@ import {
 
 export function ClienteDetalle() {
   const { id = '' } = useParams()
+  const navegar = useNavigate()
+  const [borrando, setBorrando] = useState(false)
   const { datos: c, cargando, error } = useConsulta<Cliente>(() => consultarCliente(id), [id])
   const equipos = useConsulta<Equipo[]>(() => consultarEquipos(id), [id])
   const contratos = useConsulta<Contrato[]>(() => consultarContratos(id), [id])
@@ -246,6 +248,24 @@ export function ClienteDetalle() {
           </div>
         </div>
       </Hoja>
+
+      <div className="mt-10">
+        <Boton variante="peligro" className="w-full" onClick={() => setBorrando(true)}>
+          Borrar cliente
+        </Boton>
+      </div>
+
+      <Confirmar
+        abierta={borrando}
+        titulo="Borrar el cliente"
+        detalle="Se borran también sus equipos, contratos, visitas y mantenciones programadas. No se puede deshacer."
+        textoAceptar="Borrar"
+        peligro
+        alAceptar={() => {
+          void borrarCliente(id).then(() => navegar('/clientes'))
+        }}
+        alCerrar={() => setBorrando(false)}
+      />
     </Pantalla>
   )
 }

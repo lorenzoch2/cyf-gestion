@@ -87,6 +87,13 @@ export const consultarCliente = (id: string) =>
 export const crearCliente = (cliente: Partial<Cliente>) =>
   db().from('clientes').insert(cliente).select().single()
 
+/**
+ * Borrar un cliente se lleva por delante sus equipos, contratos, visitas y
+ * mantenciones: así está declarado en el esquema. Por eso la pantalla pregunta
+ * antes y lo dice con todas sus letras.
+ */
+export const borrarCliente = (id: string) => db().from('clientes').delete().eq('id', id)
+
 export const guardarCliente = (id: string, cambios: Partial<Cliente>) =>
   db().from('clientes').update(cambios).eq('id', id)
 
