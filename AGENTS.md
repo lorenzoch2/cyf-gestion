@@ -163,3 +163,25 @@ otra. Lo único que hay que agregar en Netlify es `SUPABASE_SECRET_KEY` (Project
 - **Recibir una orden deja todo lo que traía en «lo tenemos».** El paso contrario —comprar y
   después ir ítem por ítem al inventario— es exactamente el que se olvida.
 - Los precios se guardan **netos**, como los entrega el proveedor; el IVA lo pone la pantalla.
+
+## Mantenciones programadas
+
+- **`visitas` es lo que ya pasó; `mantenciones` es lo que falta por hacer.** Separarlas evita la
+  tentación de anotar una visita futura como si ya hubiera ocurrido, que es como se ensucia una
+  bitácora.
+- **`equipo_id` nulo significa «todo el local».** En un minimarket con cuatro splits se programa una
+  visita, no cuatro.
+- **La frecuencia viaja en la mantención, no sólo en el contrato.** Una cámara de frío se ve cada
+  tres meses aunque el resto del local sea semestral.
+- **Cerrar una mantención agenda la siguiente, en el mismo gesto.** Es el motor del ingreso
+  recurrente: si la próxima no queda agendada al cerrar la anterior, no la agenda nadie. Por eso
+  `cerrarMantencion()` hace las dos cosas y no hay una pantalla aparte que haya que acordarse de
+  abrir. De paso actualiza `ultima_mantencion` del equipo.
+- La pantalla ordena por urgencia —atrasadas, esta semana, este mes, más adelante— porque esa es la
+  única pregunta del lunes en la mañana.
+
+## Cuidado al desarrollar
+
+**Si Vite dice que un módulo «does not provide an export» que sí existe, reinicia el servidor.**
+Agregar exports a `datos.ts` con el servidor corriendo deja la transformación vieja cacheada y el
+error sobrevive incluso a recargar la página. `rm -rf node_modules/.vite` y volver a levantar.

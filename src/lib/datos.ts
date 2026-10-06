@@ -4,7 +4,7 @@ import type {
   Cliente, Contrato, Equipo, LineaPresupuesto, Oportunidad, PrecioTarifario, Presupuesto,
   Prospecto, Ruta, Servicio, Tarea, Tarifario, Visita,
   CotizacionInsumo, Existencia, Insumo, Tecnico,
-  LineaOrden, OrdenCompra, Proveedor,
+  LineaOrden, Mantencion, OrdenCompra, Proveedor,
 } from './tipos'
 
 /*
@@ -313,7 +313,7 @@ export type {
   Cliente, Contrato, Equipo, LineaPresupuesto, Oportunidad, PrecioTarifario, Presupuesto,
   Prospecto, Ruta, Servicio, Tarea, Tarifario, Visita,
   CotizacionInsumo, Existencia, Insumo, Tecnico,
-  LineaOrden, OrdenCompra, Proveedor,
+  LineaOrden, Mantencion, OrdenCompra, Proveedor,
 }
 
 /* ── Equipo ─────────────────────────────────────────────────────────────── */
@@ -546,4 +546,74 @@ export async function recibirOrden(ordenId: string) {
     })
   }
   return guardarOrden(ordenId, { estado: 'recibida' })
+}
+
+/* ── Mantenciones programadas ───────────────────────────────────────────── */
+
+export const consultarMantenciones = (soloPendientes = true) => {
+  const q = db().from('mantenciones').select('*').order('programada_el')
+  return soloPendientes ? q.eq('estado', 'programada') : q
+}
+
+export const consultarMantencionesDe = (clienteId: string) =>
+  db().from('mantenciones').select('*').eq('cliente_id', clienteId).order('programada_el')
+
+export const crearMantencion = (mantencion: Partial<Mantencion>) =>
+  db().from('mantenciones').insert(mantencion).select().single()
+
+export const guardarMantencion = (id: string, cambios: Partial<Mantencion>) =>
+  db()
+    .from('mantenciones')
+    .update({ ...cambios, actualizado_en: new Date().toISOString() })
+    .eq('id', id)
+
+export const borrarMantencion = (id: string) => db().from('mantenciones').delete().eq('id', id)
+
+/**
+ * Cerrar una mantención y dejar agendada la siguiente.
+ *
+ * Es el motor del ingreso recurrente: si la próxima visita no queda agendada en
+ * el momento de cerrar la anterior, no la agenda nadie. Por eso la repetición
+ * ocurre aquí y no en una pantalla aparte que haya que acordarse de abrir.
+ *
+ * También se actualiza `ultima_mantencion` del equipo, que es lo que después
+ * permite mirar una máquina y saber cuándo se tocó por última vez.
+ */
+export async function cerrarMantencion(
+  mantencion: Mantencion,
+  realizadaEl: string,
+  nota?: string,
+) {
+  await guardarMantencion(mantencion.id, {
+    estado: 'hecha',
+    realizada_el: realizadaEl,
+    nota: nota?.trim() || mantencion.nota,
+  })
+
+  if (mantencion.equipo_id) {
+    await db()
+      .from('equipos')
+      .update({ ultima_mantencion: realizadaEl })
+      .eq('id', mantencion.equipo_id)
+  }
+
+  if (!mantencion.frecuencia_meses) return null
+
+  const siguiente = new Date(realizadaEl + 'T12:00:00')
+  siguiente.setMonth(siguiente.getMonth() + mantencion.frecuencia_meses)
+  const fecha = new Date(siguiente.getTime() - siguiente.getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 10)
+
+  const { data } = await crearMantencion({
+    cliente_id: mantencion.cliente_id,
+    equipo_id: mantencion.equipo_id,
+    contrato_id: mantencion.contrato_id,
+    tecnico_id: mantencion.tecnico_id,
+    programada_el: fecha,
+    frecuencia_meses: mantencion.frecuencia_meses,
+    titulo: mantencion.titulo,
+    estado: 'programada',
+  })
+  return data as Mantencion | null
 }

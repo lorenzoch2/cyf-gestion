@@ -23,6 +23,7 @@ import { Equipo } from './paginas/Equipo'
 import { Compras } from './paginas/Compras'
 import { CompraDetalle } from './paginas/CompraDetalle'
 import { Proveedores } from './paginas/Proveedores'
+import { Mantenciones } from './paginas/Mantenciones'
 
 /*
   El mapa arrastra Leaflet: unos 150 KB que no tienen por qué viajar cuando
@@ -65,6 +66,7 @@ export function App() {
         <Route path="/compras" element={<Compras />} />
         <Route path="/compras/:id" element={<CompraDetalle />} />
         <Route path="/proveedores" element={<Proveedores />} />
+        <Route path="/mantenciones" element={<Mantenciones />} />
         {/* La portada reemplazó a «Más»; el enlace viejo sigue llegando. */}
         <Route path="/mas" element={<Navigate to="/" replace />} />
         <Route path="*" element={<Menu />} />

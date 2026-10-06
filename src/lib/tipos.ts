@@ -478,3 +478,40 @@ export const ESTADOS_ORDEN: Record<EstadoOrden, string> = {
   recibida: 'Recibida',
   anulada: 'Anulada',
 }
+
+/* ── Mantenciones programadas ───────────────────────────────────────────── */
+
+export type EstadoMantencion = 'programada' | 'hecha' | 'reprogramada' | 'anulada'
+
+export interface Mantencion {
+  id: string
+  cliente_id: string
+  equipo_id: string | null
+  contrato_id: string | null
+  tecnico_id: string | null
+  programada_el: string
+  realizada_el: string | null
+  estado: EstadoMantencion
+  frecuencia_meses: number | null
+  titulo: string | null
+  nota: string | null
+  creado_en: string
+}
+
+export const ESTADOS_MANTENCION: Record<EstadoMantencion, string> = {
+  programada: 'Programada',
+  hecha: 'Hecha',
+  reprogramada: 'Reprogramada',
+  anulada: 'Anulada',
+}
+
+/** Cada cuánto se vuelve. Son los intervalos que se venden, no cualquier número. */
+export const FRECUENCIAS: [string, string][] = [
+  ['', 'Sin repetición'],
+  ['1', 'Cada mes'],
+  ['2', 'Cada dos meses'],
+  ['3', 'Cada tres meses'],
+  ['4', 'Cada cuatro meses'],
+  ['6', 'Cada seis meses'],
+  ['12', 'Una vez al año'],
+]
