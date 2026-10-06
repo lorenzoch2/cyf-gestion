@@ -23,7 +23,13 @@ import {
 */
 
 interface FilaHistorial extends InformeEquipo {
-  informe: { id: string; numero: string | null; fecha: string; tipo: TipoInforme } | null
+  informe: {
+    id: string
+    numero: string | null
+    fecha: string
+    tipo: TipoInforme
+    creado_en?: string
+  } | null
 }
 
 export function EquipoDetalle() {
@@ -37,9 +43,10 @@ export function EquipoDetalle() {
 
   /** De la visita más nueva a la más vieja, con lo que cambió respecto de la anterior. */
   const visitas = useMemo(() => {
+    const orden = (f: FilaHistorial) => f.informe!.fecha + ' ' + (f.informe!.creado_en ?? '')
     const filas = (historial.datos ?? [])
       .filter(f => f.informe)
-      .sort((a, b) => (a.informe!.fecha < b.informe!.fecha ? 1 : -1))
+      .sort((a, b) => (orden(a) < orden(b) ? 1 : -1))
     return filas.map((fila, i) => ({
       fila,
       cambios: filas[i + 1]

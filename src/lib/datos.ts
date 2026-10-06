@@ -770,7 +770,7 @@ export const borrarDocumento = (id: string) => db().from('documentos').delete().
 export const historialEquipo = (equipoId: string) =>
   db()
     .from('informe_equipos')
-    .select('*, informe:informes(id, numero, fecha, tipo, estado)')
+    .select('*, informe:informes(id, numero, fecha, tipo, estado, creado_en)')
     .eq('equipo_id', equipoId)
     .order('id')
 

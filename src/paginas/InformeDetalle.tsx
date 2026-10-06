@@ -43,7 +43,13 @@ function Seccion({ titulo, children }: { titulo: string; children: React.ReactNo
 
 /** Una fila del historial del equipo, con el informe al que pertenece. */
 interface FilaHistorial extends InformeEquipo {
-  informe: { id: string; numero: string | null; fecha: string; tipo: string } | null
+  informe: {
+    id: string
+    numero: string | null
+    fecha: string
+    tipo: string
+    creado_en?: string
+  } | null
 }
 
 export function InformeDetalle() {
@@ -138,6 +144,13 @@ export function InformeDetalle() {
 
         <Seccion titulo="La visita">
           <div className="space-y-2">
+            <Campo
+              etiqueta="Fecha de la visita"
+              type="date"
+              disabled={bloqueado}
+              defaultValue={i.fecha}
+              onBlur={e => e.target.value && void guardar({ fecha: e.target.value })}
+            />
             <div className="grid grid-cols-2 gap-2">
               <Campo
                 etiqueta="Entrada"
@@ -482,9 +495,11 @@ function BloqueEquipo({
   )
 
   const anterior = useMemo(() => {
+    // Dos informes del mismo día se desempatan por cuándo se creó cada uno.
+    const orden = (f: FilaHistorial) => f.informe!.fecha + ' ' + (f.informe!.creado_en ?? '')
     const previos = (historial.datos ?? [])
       .filter(f => f.id !== bloque.id && f.informe && f.informe.fecha <= fecha)
-      .sort((a, b) => (a.informe!.fecha < b.informe!.fecha ? 1 : -1))
+      .sort((a, b) => (orden(a) < orden(b) ? 1 : -1))
     return previos[0] ?? null
   }, [historial.datos, bloque.id, fecha])
 
