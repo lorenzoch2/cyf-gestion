@@ -774,3 +774,62 @@ export const DOCUMENTOS_SUGERIDOS: {
   { nombre: 'Curso de trabajo en altura', ambito: 'persona', aviso: 60 },
   { nombre: 'Examen de altura física', ambito: 'persona', aviso: 60 },
 ]
+
+/* ── Caja ───────────────────────────────────────────────────────────────── */
+
+export type TipoMovimiento = 'ingreso' | 'egreso'
+export type TipoDocumento = 'factura' | 'boleta' | 'honorarios' | 'sin_documento'
+
+export interface Movimiento {
+  id: string
+  tipo: TipoMovimiento
+  fecha: string
+  descripcion: string
+  categoria: string | null
+  cliente_id: string | null
+  proveedor_id: string | null
+  presupuesto_id: string | null
+  informe_id: string | null
+  documento: TipoDocumento
+  numero: string | null
+  neto: number
+  iva: number
+  retencion: number
+  total: number
+  estado: 'pendiente' | 'pagado'
+  vence_el: string | null
+  pagado_el: string | null
+  nota: string | null
+  creado_en: string
+}
+
+export const TIPOS_DOCUMENTO: Record<TipoDocumento, string> = {
+  factura: 'Factura',
+  boleta: 'Boleta',
+  honorarios: 'Boleta de honorarios',
+  sin_documento: 'Sin documento',
+}
+
+/** Sólo lo que da derecho a crédito o genera débito fiscal. */
+export const DOCUMENTOS_CON_IVA: TipoDocumento[] = ['factura', 'boleta']
+
+export const CATEGORIAS_INGRESO = [
+  'Mantención',
+  'Instalación',
+  'Correctivo',
+  'Diagnóstico',
+  'Venta de equipo',
+  'Otro',
+]
+
+export const CATEGORIAS_EGRESO = [
+  'Materiales y repuestos',
+  'Refrigerante',
+  'Herramientas',
+  'Combustible',
+  'Vehículo',
+  'Arriendo y servicios',
+  'Honorarios',
+  'Impuestos',
+  'Otro',
+]

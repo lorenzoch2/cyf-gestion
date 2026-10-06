@@ -255,3 +255,19 @@ error sobrevive incluso a recargar la página. `rm -rf node_modules/.vite` y vol
 Cuenta **lo crítico que no está y lo que se acabó**, no todo lo que falta por registrar. Un ítem sin
 fila de existencia es «falta» por omisión, y la primera vuelta por el taller deja decenas así: un
 aviso de «132 por reponer» se vuelve ruido y se deja de mirar a la semana.
+
+## Caja
+
+- **La app no reemplaza el libro de contabilidad.** Registra la caja y entrega las cifras del mes ya
+  ordenadas; el libro y el F29 siguen siendo el registro formal. La pantalla lo dice con todas sus
+  letras, porque una app que parece el libro termina siendo el libro sin que nadie lo decida.
+- **Se guardan los tres montos: neto, IVA y total.** Podría calcularse uno desde otro, pero una
+  boleta real trae el total redondeado y el neto que sale de dividir por 1,19 no siempre cuadra al
+  peso. Guardar los tres deja que mande el documento, que es lo que el SII mira.
+- **Sólo factura y boleta mueven IVA.** Una boleta de honorarios o una compra sin documento salen de
+  la caja igual, pero no dan crédito fiscal. Mezclarlos infla el crédito y eso se paga con multa.
+- **La retención de honorarios se anota a mano.** La tasa la fija la ley y sube todos los años; una
+  tasa cableada en el código es una cifra equivocada esperando al próximo enero.
+- **El IVA del mes se calcula sobre lo emitido y recibido, no sobre lo cobrado**, que es como se
+  declara. El remanente arrastrado de meses anteriores no se intenta encadenar acá: esa cadena está
+  en el libro, y el F29 se declara con la propuesta del SII.

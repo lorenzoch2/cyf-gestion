@@ -5,7 +5,7 @@ import type {
   Prospecto, Ruta, Servicio, Tarea, Tarifario, Visita,
   CotizacionInsumo, Existencia, Insumo, Tecnico,
   LineaOrden, Mantencion, OrdenCompra, Proveedor,
-  Documento, FotoInforme, Hallazgo, Informe, InformeEquipo, MaterialInforme,
+  Documento, FotoInforme, Hallazgo, Informe, InformeEquipo, MaterialInforme, Movimiento,
 } from './tipos'
 
 /*
@@ -322,7 +322,7 @@ export type {
   Prospecto, Ruta, Servicio, Tarea, Tarifario, Visita,
   CotizacionInsumo, Existencia, Insumo, Tecnico,
   LineaOrden, Mantencion, OrdenCompra, Proveedor,
-  Documento, FotoInforme, Hallazgo, Informe, InformeEquipo, MaterialInforme,
+  Documento, FotoInforme, Hallazgo, Informe, InformeEquipo, MaterialInforme, Movimiento,
 }
 
 /* ── Equipo ─────────────────────────────────────────────────────────────── */
@@ -776,3 +776,27 @@ export const historialEquipo = (equipoId: string) =>
 
 export const consultarEquipo = (id: string) =>
   db().from('equipos').select('*').eq('id', id).single()
+
+/* ── Caja ───────────────────────────────────────────────────────────────── */
+
+export const consultarMovimientos = (desde?: string, hasta?: string) => {
+  let q = db().from('movimientos').select('*').order('fecha', { ascending: false })
+  if (desde) q = q.gte('fecha', desde)
+  if (hasta) q = q.lte('fecha', hasta)
+  return q
+}
+
+/** Lo que está por cobrar o por pagar, venga del mes que venga. */
+export const consultarPendientes = () =>
+  db().from('movimientos').select('*').eq('estado', 'pendiente').order('vence_el')
+
+export const crearMovimiento = (movimiento: Partial<Movimiento>) =>
+  db().from('movimientos').insert(movimiento).select().single()
+
+export const guardarMovimiento = (id: string, cambios: Partial<Movimiento>) =>
+  db()
+    .from('movimientos')
+    .update({ ...cambios, actualizado_en: new Date().toISOString() })
+    .eq('id', id)
+
+export const borrarMovimiento = (id: string) => db().from('movimientos').delete().eq('id', id)

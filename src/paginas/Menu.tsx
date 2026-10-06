@@ -37,6 +37,12 @@ const GRUPOS: { titulo: string; items: { a: string; titulo: string; detalle: str
     ],
   },
   {
+    titulo: 'Plata',
+    items: [
+      { a: '/caja', titulo: 'Caja', detalle: 'Lo que entra, lo que sale y el IVA del mes' },
+    ],
+  },
+  {
     titulo: 'Operación',
     items: [
       { a: '/mantenciones', titulo: 'Mantenciones', detalle: 'Las visitas programadas y lo que está atrasado' },

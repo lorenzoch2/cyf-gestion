@@ -93,3 +93,28 @@ export function enlaceMapa(lat: number | null, lng: number | null, direccion?: s
   }
   return null
 }
+
+/* ── Meses ──────────────────────────────────────────────────────────────── */
+
+/** `2026-10`: el mes como lo manejan las pantallas y el campo `month`. */
+export function mesActual(): string {
+  return hoyIso().slice(0, 7)
+}
+
+export function mesVecino(mes: string, pasos: number): string {
+  const [anio, m] = mes.split('-').map(Number)
+  const f = new Date(anio, m - 1 + pasos, 1)
+  return `${f.getFullYear()}-${String(f.getMonth() + 1).padStart(2, '0')}`
+}
+
+/** El primer y el último día del mes, para filtrar por fecha. */
+export function rangoMes(mes: string): [string, string] {
+  const [anio, m] = mes.split('-').map(Number)
+  const ultimo = new Date(anio, m, 0).getDate()
+  return [`${mes}-01`, `${mes}-${String(ultimo).padStart(2, '0')}`]
+}
+
+export function mesLargo(mes: string): string {
+  const [anio, m] = mes.split('-').map(Number)
+  return new Date(anio, m - 1, 1).toLocaleDateString('es-CL', { month: 'long', year: 'numeric' })
+}
