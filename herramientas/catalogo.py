@@ -8,7 +8,7 @@ editar esta lista, nunca el SQL ni el Markdown, que se regeneran.
 
 Las notas que citan páginas vienen del curso «Buenas Prácticas en Refrigeración
 y Climatización» (Unidad Ozono, Ministerio del Medio Ambiente, Chile 2018), que
-está en «09 Conocimiento Técnico/Normativa y Buenas Prácticas».
+está en «08 Conocimiento Técnico/Normativa y Buenas Prácticas».
 
 Banderas:
   k  crítico: sin esto no se puede trabajar, o lo exige la norma
@@ -390,7 +390,7 @@ def escribir_hoja(filas, destino):
         "",
         "Las referencias entre paréntesis apuntan a las páginas del curso **Buenas Prácticas en",
         "Refrigeración y Climatización** (Unidad Ozono, Ministerio del Medio Ambiente, 2018),",
-        "guardado en `09 Conocimiento Técnico/Normativa y Buenas Prácticas`.",
+        "guardado en `08 Conocimiento Técnico/Normativa y Buenas Prácticas`.",
         "",
         "Esta hoja se genera desde `cyf-gestion/herramientas/catalogo.py`. La lista viva, con el",
         "estado de cada ítem por técnico, está en la app de gestión.",

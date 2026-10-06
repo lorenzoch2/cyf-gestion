@@ -33,7 +33,9 @@ export function CompraDetalle() {
     setAviso(
       cuantas === 0
         ? 'No hay nada que falte con precio de este proveedor.'
-        : `Se agregaron ${cuantas} líneas.`,
+        : cuantas === 1
+          ? 'Se agregó una línea.'
+          : `Se agregaron ${cuantas} líneas.`,
     )
     void lineas.recargar()
   }

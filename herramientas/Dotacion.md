@@ -9,7 +9,7 @@ si salen a trabajos distintos el mismo día.
 
 Las referencias entre paréntesis apuntan a las páginas del curso **Buenas Prácticas en
 Refrigeración y Climatización** (Unidad Ozono, Ministerio del Medio Ambiente, 2018),
-guardado en `09 Conocimiento Técnico/Normativa y Buenas Prácticas`.
+guardado en `08 Conocimiento Técnico/Normativa y Buenas Prácticas`.
 
 Esta hoja se genera desde `cyf-gestion/herramientas/catalogo.py`. La lista viva, con el
 estado de cada ítem por técnico, está en la app de gestión.
