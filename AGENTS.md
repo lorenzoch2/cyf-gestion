@@ -142,5 +142,8 @@ la toca `netlify/functions/crear-usuario.mts`, que corre en el servidor y ademá
 llama venga con una sesión válida de la app. En desarrollo la función no existe y la pantalla lo
 dice en vez de fallar en silencio.
 
-Variables que hay que configurar en Netlify (Site configuration → Environment variables):
-`SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` y `SUPABASE_SERVICE_ROLE_KEY`.
+**No se duplican variables.** La función lee `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`, que el
+sitio ya tiene configuradas para compilar: el prefijo `VITE_` sólo le importa a Vite —marca lo que
+puede viajar al navegador— y para una función de Netlify son variables de entorno como cualquier
+otra. Lo único que hay que agregar en Netlify es `SUPABASE_SECRET_KEY` (Project Settings → API Keys
+→ Secret keys; en proyectos antiguos es la `service_role`).

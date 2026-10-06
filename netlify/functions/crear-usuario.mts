@@ -11,10 +11,15 @@
     1. quien llama tiene que venir con una sesión válida de la app;
     2. la llave de servicio tiene que estar configurada.
 
-  Variables de entorno necesarias en Netlify:
-    SUPABASE_URL                → https://xxxx.supabase.co
-    SUPABASE_PUBLISHABLE_KEY    → la misma llave pública que usa la app
-    SUPABASE_SERVICE_ROLE_KEY   → Project Settings → API → service_role
+  La URL y la llave pública se leen de las variables que el sitio ya tiene. El
+  prefijo `VITE_` sólo le importa a Vite al compilar —marca lo que puede viajar
+  al navegador—; para esta función son variables de entorno como cualquier
+  otra, así que no hay que duplicarlas con otro nombre. Los nombres sin prefijo
+  quedan como alternativa por si algún día se configuran aparte.
+
+  Lo único que hay que agregar en Netlify es la llave secreta:
+    SUPABASE_SECRET_KEY   → Project Settings → API Keys → Secret keys
+                            (en proyectos antiguos se llama service_role)
 */
 
 const JSON_HEADERS = { 'content-type': 'application/json' }
@@ -26,12 +31,15 @@ function responder(cuerpo: unknown, status: number) {
 export default async (req: Request) => {
   if (req.method !== 'POST') return responder({ error: 'Método no permitido' }, 405)
 
-  const url = process.env.SUPABASE_URL
-  const publica = process.env.SUPABASE_PUBLISHABLE_KEY
-  const servicio = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!url || !publica || !servicio) {
+  const url = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL
+  const publica = process.env.VITE_SUPABASE_ANON_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY
+  const servicio = process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !publica) {
+    return responder({ error: 'Faltan las variables de Supabase en Netlify.' }, 500)
+  }
+  if (!servicio) {
     return responder(
-      { error: 'Falta configurar las variables de Supabase en Netlify.' },
+      { error: 'Falta SUPABASE_SECRET_KEY en las variables de Netlify.' },
       500,
     )
   }
