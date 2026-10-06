@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   Area, Boton, Campo, Cargando, Confirmar, Dato, Error, Etiqueta, Hoja, Pantalla, Selector,
   Tarjeta, Vacio,
@@ -115,12 +115,13 @@ export function ClienteDetalle() {
             {(equipos.datos ?? []).map(e => (
               <li key={e.id}>
                 <Tarjeta className="flex items-center justify-between gap-3 p-3">
-                  <div className="min-w-0">
+                  {/* La ficha de la máquina: su historia y lo que midió cada visita. */}
+                  <Link to={`/equipos/${e.id}`} className="min-w-0 flex-1">
                     <p className="text-sm font-medium">{TIPOS_EQUIPO[e.tipo] ?? e.tipo}</p>
                     <p className="truncate text-xs text-mut">
                       {[e.capacidad, e.ubicacion].filter(Boolean).join(' · ') || 'Sin detalle'}
                     </p>
-                  </div>
+                  </Link>
                   <button onClick={() => setQuitando(e)} className="shrink-0 text-xs text-faint active:text-rojo">
                     quitar
                   </button>

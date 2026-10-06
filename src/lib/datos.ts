@@ -759,3 +759,20 @@ export const guardarDocumento = (id: string, cambios: Partial<Documento>) =>
     .eq('id', id)
 
 export const borrarDocumento = (id: string) => db().from('documentos').delete().eq('id', id)
+
+/**
+ * La historia de una máquina: cada vez que apareció en un informe.
+ *
+ * Es lo que permite decir «el consumo pasó de 7,2 A en abril a 9,4 A hoy», que
+ * convence a un cliente mucho mejor que una opinión. Se trae el informe junto
+ * en la misma consulta para no hacer una por fila.
+ */
+export const historialEquipo = (equipoId: string) =>
+  db()
+    .from('informe_equipos')
+    .select('*, informe:informes(id, numero, fecha, tipo, estado)')
+    .eq('equipo_id', equipoId)
+    .order('id')
+
+export const consultarEquipo = (id: string) =>
+  db().from('equipos').select('*').eq('id', id).single()

@@ -225,3 +225,33 @@ error sobrevive incluso a recargar la página. `rm -rf node_modules/.vite` y vol
   no tenerlo anotado: la lista sólo rellena nombre, ámbito, aviso y dónde vive.
 - **La portada carga tres cuentas**: lo que falta reponer, las mantenciones atrasadas y los
   documentos por renovar. Un módulo que hay que acordarse de abrir no avisa de nada.
+
+## Diagnóstico
+
+- **El diagnóstico va por equipo, no por visita.** En un local con cuatro máquinas, tres pueden
+  estar sanas y una no. Vive en `informe_equipos`: síntoma que reporta el cliente, qué se descartó,
+  causa probable y severidad.
+- **`diagnostico.ts` lee las mediciones, no diagnostica.** Ordena lo que los números insinúan, con
+  el porqué a la vista, para que el técnico confirme o descarte. Un sobrecalentamiento alto con
+  subenfriamiento bajo apunta a falta de refrigerante, pero también puede ser una válvula mal
+  regulada; eso lo decide quien está frente a la máquina. La pantalla lo dice con esas palabras.
+- **Existe igual porque el razonamiento de un buen técnico se puede escribir**, y tenerlo escrito
+  sirve para que el informe explique en castellano por qué se propone un trabajo, para que no se
+  pase por alto lo evidente al final de un día largo, y para que Francisco y Lorenzo lleguen a la
+  misma conclusión frente a los mismos números.
+- **Los rangos son orientación, no norma.** Vienen de la práctica del oficio y del curso de la
+  Unidad Ozono. Un equipo puede estar sano fuera de rango y enfermo dentro, y por eso ninguna regla
+  bloquea nada: sólo muestra.
+- **`familiaDe()` vive en un solo lugar.** Estaba duplicada en la pantalla del informe y en el PDF;
+  si se bifurca, el PDF imprime mediciones que la pantalla no pidió.
+- **La ficha del equipo (`/equipos/:id`) es la historia clínica de la máquina.** El dato ya estaba
+  en cada informe; lo que no había era dónde mirarlo junto. «El consumo pasó de 7,2 A en abril a
+  9,4 A hoy» convence a un cliente mucho mejor que una opinión, y además está medido.
+- **Un cambio chico entre visitas no se muestra.** Bajo el 10% —o bajo un punto entero— es la mano
+  que midió, no la máquina.
+
+## El aviso del inventario en la portada
+
+Cuenta **lo crítico que no está y lo que se acabó**, no todo lo que falta por registrar. Un ítem sin
+fila de existencia es «falta» por omisión, y la primera vuelta por el taller deja decenas así: un
+aviso de «132 por reponer» se vuelve ruido y se deja de mirar a la semana.

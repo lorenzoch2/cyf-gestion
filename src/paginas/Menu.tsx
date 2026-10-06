@@ -3,10 +3,10 @@ import { Boton, Pantalla, Tarjeta } from '../componentes/ui'
 import { IconoFlecha } from '../componentes/iconos'
 import { useSesion } from '../lib/sesion'
 import {
-  consultarDocumentos, consultarExistencias, consultarMantenciones, useConsulta,
+  consultarCatalogo, consultarDocumentos, consultarExistencias, consultarMantenciones, useConsulta,
 } from '../lib/datos'
 import { diasHasta } from '../lib/formato'
-import type { Documento, Existencia, Mantencion } from '../lib/tipos'
+import type { Documento, Existencia, Insumo, Mantencion } from '../lib/tipos'
 
 /*
   La portada.
@@ -59,16 +59,37 @@ export function Menu() {
     vence igual. Por eso la portada carga estas tres cuentas y las muestra al
     lado del nombre.
   */
+  const catalogo = useConsulta<Insumo[]>(() => consultarCatalogo(), [])
   const existencias = useConsulta<Existencia[]>(() => consultarExistencias(), [])
   const mantenciones = useConsulta<Mantencion[]>(() => consultarMantenciones(true), [])
   const documentos = useConsulta<Documento[]>(() => consultarDocumentos(), [])
 
   const avisos: Record<string, string> = {}
 
-  const faltan = (existencias.datos ?? []).filter(
-    e => e.estado === 'falta' || e.estado === 'agotado',
-  ).length
-  if (faltan > 0) avisos['/inventario'] = `${faltan} por reponer`
+  /*
+    El aviso del inventario cuenta lo que hay que conseguir, no todo lo que
+    falta por registrar.
+
+    Un ítem sin fila de existencia es «falta» por omisión, y la primera vuelta
+    por el taller deja decenas así: un aviso de «132 por reponer» en la portada
+    se vuelve ruido y se deja de mirar a la semana. Lo que exige acción es lo
+    crítico que no está —sin recuperadora no se trabaja dentro de norma— y lo
+    que se acabó de verdad.
+  */
+  const tiene = new Set(
+    (existencias.datos ?? []).filter(e => e.estado === 'tiene').map(e => e.insumo_id),
+  )
+  const agotados = (existencias.datos ?? []).filter(e => e.estado === 'agotado').length
+  const criticos = (catalogo.datos ?? []).filter(c => c.critico && !tiene.has(c.id)).length
+  const conseguir = criticos + agotados
+  if (conseguir > 0) {
+    avisos['/inventario'] =
+      criticos > 0 && agotados > 0
+        ? `${criticos} críticos y ${agotados} agotados`
+        : criticos > 0
+          ? `${criticos} críticos faltan`
+          : `${agotados} por reponer`
+  }
 
   const atrasadas = (mantenciones.datos ?? []).filter(
     m => (diasHasta(m.programada_el) ?? 0) < 0,

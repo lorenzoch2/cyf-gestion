@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   Area, Boton, Campo, Cargando, Confirmar, Hoja, Pantalla, Selector, Tarjeta,
@@ -9,14 +9,15 @@ import {
   consultarCatalogo, consultarCliente, consultarEquipos, consultarFotos, consultarHallazgos,
   consultarInforme, consultarInformeEquipos, consultarMateriales, crearFoto, crearHallazgo,
   crearInformeEquipo, crearMaterial, emitirInforme, guardarInforme, guardarInformeEquipo,
-  useConsulta,
+  historialEquipo, useConsulta,
 } from '../lib/datos'
 import { borrarFoto, leerFoto, subirFoto } from '../lib/fotos'
+import { compararMediciones, familiaDe, leerMediciones } from '../lib/diagnostico'
 import { fechaCorta } from '../lib/formato'
 import {
   MEDICIONES_CIRCUITO, MEDICIONES_POR_FAMILIA, MOMENTOS_FOTO, NIVELES_HALLAZGO,
   TAREAS_POR_FAMILIA, TIPOS_EQUIPO, TIPOS_INFORME,
-  type Cliente, type Equipo, type FamiliaEquipo, type FotoInforme, type Hallazgo, type Informe,
+  type Cliente, type Equipo, type FotoInforme, type Hallazgo, type Informe,
   type InformeEquipo, type Insumo, type MaterialInforme, type MomentoFoto, type NivelHallazgo,
 } from '../lib/tipos'
 
@@ -31,13 +32,6 @@ import {
   obligatorio que no se puede llenar termina con gente inventando números.
 */
 
-function familiaDe(equipo?: Equipo | null): FamiliaEquipo {
-  const t = (equipo?.tipo ?? '').toLowerCase()
-  if (/c[aá]mara|visicooler|congelad|mostrador|refriger|hielo/.test(t)) return 'refrigeracion'
-  if (/ventila|extractor|inyect|ducto|campana/.test(t)) return 'ventilacion'
-  return 'climatizacion'
-}
-
 function Seccion({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
     <section>
@@ -45,6 +39,11 @@ function Seccion({ titulo, children }: { titulo: string; children: React.ReactNo
       {children}
     </section>
   )
+}
+
+/** Una fila del historial del equipo, con el informe al que pertenece. */
+interface FilaHistorial extends InformeEquipo {
+  informe: { id: string; numero: string | null; fecha: string; tipo: string } | null
 }
 
 export function InformeDetalle() {
@@ -171,6 +170,7 @@ export function InformeDetalle() {
                 key={b.id}
                 bloque={b}
                 equipo={equipos.datos?.find(e => e.id === b.equipo_id) ?? null}
+                fecha={i.fecha}
                 bloqueado={bloqueado}
                 alGuardar={() => void bloques.recargar()}
               />
@@ -396,11 +396,13 @@ export function InformeDetalle() {
 function BloqueEquipo({
   bloque,
   equipo,
+  fecha,
   bloqueado,
   alGuardar,
 }: {
   bloque: InformeEquipo
   equipo: Equipo | null
+  fecha: string
   bloqueado: boolean
   alGuardar: () => void
 }) {
@@ -423,7 +425,10 @@ function BloqueEquipo({
     trabajo: bloque.trabajo ?? [],
     mediciones: bloque.mediciones ?? {},
   })
-  const [vista, setVista] = useState(vivo.current)
+  const [vista, setVista] = useState({
+    trabajo: bloque.trabajo ?? [],
+    mediciones: bloque.mediciones ?? {},
+  })
 
   /*
     Y además se guardan de a uno.
@@ -464,6 +469,28 @@ function BloqueEquipo({
   }
 
   const medidas = Object.keys(vista.mediciones).length
+
+  // Lo que los números insinúan, y lo que se movió desde la vez pasada.
+  const pistas = leerMediciones(familia, vista.mediciones)
+
+  const historial = useConsulta<FilaHistorial[]>(
+    () =>
+      bloque.equipo_id
+        ? historialEquipo(bloque.equipo_id)
+        : Promise.resolve({ data: [] as FilaHistorial[], error: null }),
+    [bloque.equipo_id],
+  )
+
+  const anterior = useMemo(() => {
+    const previos = (historial.datos ?? [])
+      .filter(f => f.id !== bloque.id && f.informe && f.informe.fecha <= fecha)
+      .sort((a, b) => (a.informe!.fecha < b.informe!.fecha ? 1 : -1))
+    return previos[0] ?? null
+  }, [historial.datos, bloque.id, fecha])
+
+  const cambios = anterior
+    ? compararMediciones(mediciones, anterior.mediciones, vista.mediciones).filter(c => c.relevante)
+    : []
 
   return (
     <Tarjeta className="p-3">
@@ -524,12 +551,109 @@ function BloqueEquipo({
                   type="number"
                   inputMode="decimal"
                   disabled={bloqueado}
-                  defaultValue={vivo.current.mediciones[m.clave] ?? ''}
+                  defaultValue={vista.mediciones[m.clave] ?? ''}
                   onBlur={e => fijarMedicion(m.clave, e.target.value)}
                 />
               ))}
             </div>
           )}
+
+          {pistas.length > 0 && (
+            <div className="space-y-2 rounded-lg border border-linea bg-tinte/50 p-3">
+              <p className="font-mono text-xs uppercase tracking-wider text-faint">
+                Lo que dicen las mediciones
+              </p>
+              {pistas.map(p => (
+                <div key={p.titulo}>
+                  <p className="text-sm font-medium">
+                    <span
+                      className={`mr-1.5 rounded px-1.5 py-0.5 text-[0.7rem] ${
+                        NIVELES_HALLAZGO[p.nivel].pastilla
+                      }`}
+                    >
+                      {NIVELES_HALLAZGO[p.nivel].corta}
+                    </span>
+                    {p.titulo}
+                  </p>
+                  <p className="mt-0.5 text-xs text-mut">{p.porque}</p>
+                  <p className="mt-0.5 text-xs text-mut">{p.quehacer}</p>
+                </div>
+              ))}
+              <p className="text-xs text-faint">
+                Es orientación, no diagnóstico: confirmar en el equipo antes de proponer nada.
+              </p>
+            </div>
+          )}
+
+          {cambios.length > 0 && anterior?.informe && (
+            <div className="rounded-lg border border-linea bg-white p-3">
+              <p className="font-mono text-xs uppercase tracking-wider text-faint">
+                Cambió desde el {fechaCorta(anterior.informe.fecha)}
+              </p>
+              <ul className="mt-1.5 space-y-1">
+                {cambios.map(c => (
+                  <li key={c.clave} className="flex items-baseline justify-between gap-2 text-sm">
+                    <span className="min-w-0 truncate text-mut">{c.etiqueta}</span>
+                    <span className="shrink-0 font-mono text-xs">
+                      {c.antes} → {c.ahora} {c.unidad}
+                      <span className={c.variacion > 0 ? 'ml-1.5 text-naranja' : 'ml-1.5 text-acero-dk'}>
+                        {c.variacion > 0 ? '+' : ''}
+                        {c.variacion}
+                      </span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <div className="space-y-2 border-t border-linea pt-3">
+            <p className="font-mono text-xs uppercase tracking-wider text-faint">Diagnóstico</p>
+            <Area
+              etiqueta="Qué reporta el cliente"
+              rows={2}
+              disabled={bloqueado}
+              defaultValue={bloque.sintoma ?? ''}
+              placeholder="Bota agua por dentro desde el jueves"
+              onBlur={e =>
+                void guardarInformeEquipo(bloque.id, { sintoma: e.target.value || null }).then(alGuardar)
+              }
+            />
+            <Area
+              etiqueta="Qué se descartó"
+              rows={2}
+              disabled={bloqueado}
+              defaultValue={bloque.descartado ?? ''}
+              placeholder="Drenaje despejado y con pendiente; filtros limpios; carga correcta"
+              onBlur={e =>
+                void guardarInformeEquipo(bloque.id, { descartado: e.target.value || null }).then(alGuardar)
+              }
+            />
+            <Area
+              etiqueta="Causa probable"
+              rows={2}
+              disabled={bloqueado}
+              defaultValue={bloque.causa ?? ''}
+              placeholder="Evaporadora fuera de nivel: la bandeja desagua hacia el lado equivocado"
+              onBlur={e =>
+                void guardarInformeEquipo(bloque.id, { causa: e.target.value || null }).then(alGuardar)
+              }
+            />
+            <Selector
+              etiqueta="Qué tan grave"
+              opciones={[
+                ['', 'Sin clasificar'],
+                ...Object.entries(NIVELES_HALLAZGO).map(([k, v]) => [k, v.etiqueta] as [string, string]),
+              ]}
+              disabled={bloqueado}
+              value={bloque.severidad ?? ''}
+              onChange={e =>
+                void guardarInformeEquipo(bloque.id, {
+                  severidad: (e.target.value || null) as NivelHallazgo | null,
+                }).then(alGuardar)
+              }
+            />
+          </div>
 
           <div className="grid grid-cols-3 gap-2">
             <Campo

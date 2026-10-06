@@ -555,6 +555,12 @@ export interface InformeEquipo {
   gas_cargado: number | null
   nota: string | null
   orden: number
+  /* El diagnóstico va por equipo: en un local con cuatro máquinas, tres
+     pueden estar sanas y una no. */
+  sintoma: string | null
+  descartado: string | null
+  causa: string | null
+  severidad: NivelHallazgo | null
 }
 
 export interface Hallazgo {

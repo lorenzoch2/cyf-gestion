@@ -26,6 +26,7 @@ import { Proveedores } from './paginas/Proveedores'
 import { Mantenciones } from './paginas/Mantenciones'
 import { Informes } from './paginas/Informes'
 import { Documentos } from './paginas/Documentos'
+import { EquipoDetalle } from './paginas/EquipoDetalle'
 
 /*
   El mapa arrastra Leaflet: unos 150 KB que no tienen por qué viajar cuando
@@ -79,6 +80,7 @@ export function App() {
         <Route path="/mantenciones" element={<Mantenciones />} />
         <Route path="/informes" element={<Informes />} />
         <Route path="/documentos" element={<Documentos />} />
+        <Route path="/equipos/:id" element={<EquipoDetalle />} />
         <Route
           path="/informes/:id"
           element={

@@ -5,10 +5,11 @@ import plexMono from '../assets/fuentes/PlexMono-400.ttf?url'
 import lockup from '../assets/marca/lockup-horizontal.png?url'
 import { fechaCorta } from './formato'
 import { leerFoto } from './fotos'
+import { familiaDe } from './diagnostico'
 import {
   MEDICIONES_CIRCUITO, MEDICIONES_POR_FAMILIA, MOMENTOS_FOTO, NIVELES_HALLAZGO, TIPOS_EQUIPO,
   TIPOS_INFORME,
-  type Cliente, type Equipo, type FamiliaEquipo, type FotoInforme, type Hallazgo, type Informe,
+  type Cliente, type Equipo, type FotoInforme, type Hallazgo, type Informe,
   type InformeEquipo, type MaterialInforme, type Tecnico,
 } from './tipos'
 
@@ -56,14 +57,6 @@ export interface DatosInforme {
   cliente?: Cliente | null
   equipos: Equipo[]
   tecnico?: Tecnico | null
-}
-
-/** La familia manda qué mediciones tienen nombre; se deduce del tipo de equipo. */
-function familiaDe(equipo?: Equipo | null): FamiliaEquipo {
-  const t = (equipo?.tipo ?? '').toLowerCase()
-  if (/c[aá]mara|visicooler|congelad|mostrador|refriger|hielo/.test(t)) return 'refrigeracion'
-  if (/ventila|extractor|inyect|ducto|campana/.test(t)) return 'ventilacion'
-  return 'climatizacion'
 }
 
 export async function generarInformePdf({
@@ -246,6 +239,38 @@ export async function generarInformePdf({
         })
         y += 9
       }
+    }
+
+    const diagnostico: [string, string | null][] = [
+      ['Lo que reporta el cliente', bloque.sintoma],
+      ['Qué se descartó', bloque.descartado],
+      ['Causa probable', bloque.causa],
+    ]
+    if (diagnostico.some(([, v]) => v)) {
+      sitio(14)
+      y += 1
+      texto('DIAGNÓSTICO', MARGEN, y, { fuente: 'PlexMono', tam: 6.5, color: LATON })
+      y += 4.5
+      for (const [etiqueta, valor] of diagnostico) {
+        if (!valor) continue
+        const lineas = doc.splitTextToSize(valor, UTIL - 34) as string[]
+        sitio(lineas.length * 4.4 + 2)
+        texto(etiqueta, MARGEN, y, { tam: 7.5, color: FAINT })
+        let yd = y
+        for (const l of lineas) {
+          texto(l, MARGEN + 34, yd, { tam: 8.5 })
+          yd += 4.4
+        }
+        y = yd + 1.2
+      }
+      if (bloque.severidad) {
+        texto(NIVELES_HALLAZGO[bloque.severidad].etiqueta, MARGEN, y, {
+          tam: 8,
+          color: bloque.severidad === 'urgente' ? ROJO : bloque.severidad === 'atencion' ? LATON : FAINT,
+        })
+        y += 5
+      }
+      y += 1
     }
 
     if (bloque.gas_tipo && (bloque.gas_recuperado || bloque.gas_cargado)) {
