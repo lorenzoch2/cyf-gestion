@@ -7,7 +7,7 @@ import {
   consultarProveedores, crearMovimiento, guardarMovimiento, useConsulta,
 } from '../lib/datos'
 import {
-  clp, conIva, fechaCorta, hoyIso, IVA, mesActual, mesLargo, mesVecino, rangoMes,
+  clp, conIva, fechaCorta, hoyIso, IVA, mesActual, mesLargo, mesVecino, plural, rangoMes,
 } from '../lib/formato'
 import {
   CATEGORIAS_EGRESO, CATEGORIAS_INGRESO, DOCUMENTOS_CON_IVA, TIPOS_DOCUMENTO,
@@ -176,14 +176,18 @@ export function Caja() {
                 <p className="font-mono text-lg font-semibold text-laton-dk">
                   {clp(porCobrar.reduce((s, m) => s + m.total, 0))}
                 </p>
-                <p className="font-mono text-xs text-faint">{porCobrar.length} documentos</p>
+                <p className="font-mono text-xs text-faint">
+                  {plural(porCobrar.length, 'documento', 'documentos')}
+                </p>
               </Tarjeta>
               <Tarjeta className="p-3">
                 <p className="text-sm text-mut">Por pagar</p>
                 <p className="font-mono text-lg font-semibold">
                   {clp(porPagar.reduce((s, m) => s + m.total, 0))}
                 </p>
-                <p className="font-mono text-xs text-faint">{porPagar.length} documentos</p>
+                <p className="font-mono text-xs text-faint">
+                  {plural(porPagar.length, 'documento', 'documentos')}
+                </p>
               </Tarjeta>
             </div>
           </section>
@@ -233,7 +237,7 @@ export function Caja() {
                         </div>
                         <div className="shrink-0 text-right">
                           <p className="font-mono text-sm font-medium">
-                            {m.tipo === 'egreso' && '−'}
+                            {m.tipo === 'egreso' && '-'}
                             {clp(m.total)}
                           </p>
                           <p className="font-mono text-xs text-faint">{fechaCorta(m.fecha)}</p>

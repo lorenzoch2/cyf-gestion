@@ -187,7 +187,7 @@ export async function generarPresupuestoPdf({ presupuesto, lineas, cliente, pros
   }
 
   fila('Neto', clp(neto))
-  if (rebaja > 0) fila(`Descuento ${presupuesto.descuento_pct}%`, `−${clp(rebaja)}`)
+  if (rebaja > 0) fila(`Descuento ${presupuesto.descuento_pct}%`, `-${clp(rebaja)}`)
   fila(`IVA ${Math.round(IVA * 100)}%`, clp(total - netoFinal))
   doc.setDrawColor(...GRAFITO)
   doc.setLineWidth(0.4)

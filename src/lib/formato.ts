@@ -9,7 +9,12 @@ export function plural(n: number, singular: string, plural: string): string {
 
 export function clp(valor: number | null | undefined): string {
   if (valor === null || valor === undefined) return '—'
-  return '$' + Math.round(valor).toLocaleString('es-CL')
+  const n = Math.round(valor)
+  // El signo va antes del peso —«-$155.400» y no «$-155.400»—, y es un guion
+  // común y no el signo menos tipográfico: el menos de verdad puede no estar
+  // en el subconjunto de la tipografía que se incrusta en el PDF, y entonces
+  // no se dibuja nada. Ya pasó con el visto de los informes.
+  return (n < 0 ? '-$' : '$') + Math.abs(n).toLocaleString('es-CL')
 }
 
 export function conIva(neto: number): number {
