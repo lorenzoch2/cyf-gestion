@@ -1,12 +1,16 @@
 import { NavLink } from 'react-router-dom'
 import { IconoClientes, IconoHoy, IconoMapa, IconoMas, IconoNegocios } from './iconos'
 
+/*
+  Cinco destinos y no más: son los que caben bajo el pulgar. El menú de la
+  portada es el que crece cuando aparece un módulo nuevo.
+*/
 const ENLACES = [
-  { a: '/', texto: 'Hoy', Icono: IconoHoy, exacto: true },
+  { a: '/', texto: 'Menú', Icono: IconoMas, exacto: true },
+  { a: '/hoy', texto: 'Hoy', Icono: IconoHoy },
   { a: '/prospectos', texto: 'Prospectos', Icono: IconoMapa },
   { a: '/clientes', texto: 'Clientes', Icono: IconoClientes },
   { a: '/negocios', texto: 'Negocios', Icono: IconoNegocios },
-  { a: '/mas', texto: 'Más', Icono: IconoMas },
 ]
 
 /** Barra inferior: el pulgar llega ahí sin mover la mano. */

@@ -322,3 +322,105 @@ export const TIPOS_TARIFARIO: Record<TipoTarifario, string> = {
   zona: 'Por zona',
   cliente: 'Por cliente',
 }
+
+/* ── Equipo e inventario ────────────────────────────────────────────────── */
+
+export type Ambito = 'T' | 'E' | 'V'
+export type EstadoExistencia = 'tiene' | 'falta' | 'agotado' | 'baja'
+export type EstadoCotizacion = 'pedida' | 'recibida' | 'comprada' | 'descartada'
+
+export interface Tecnico {
+  id: string
+  nombre: string
+  rol: string | null
+  telefono: string | null
+  email: string | null
+  usuario_id: string | null
+  activo: boolean
+  orden: number
+  nota: string | null
+  creado_en: string
+}
+
+export interface Insumo {
+  id: string
+  codigo: string
+  nombre: string
+  categoria: string
+  ambito: Ambito
+  unidad: string
+  cantidad_objetivo: number
+  critico: boolean
+  consumible: boolean
+  nota: string | null
+  orden: number
+  activo: boolean
+}
+
+export interface Existencia {
+  id: string
+  insumo_id: string
+  tecnico_id: string | null
+  estado: EstadoExistencia
+  cantidad: number
+  marca: string | null
+  modelo: string | null
+  serie: string | null
+  valor: number | null
+  ubicacion: string | null
+  nota: string | null
+  actualizado_en: string
+}
+
+export interface CotizacionInsumo {
+  id: string
+  insumo_id: string
+  proveedor: string
+  telefono: string | null
+  url: string | null
+  precio_neto: number | null
+  cantidad: number
+  fecha: string
+  estado: EstadoCotizacion
+  nota: string | null
+  creado_en: string
+}
+
+/** De quién es cada cosa. Lo de ámbito «T» se repite por persona. */
+export const AMBITOS: Record<Ambito, { etiqueta: string; corta: string }> = {
+  T: { etiqueta: 'Uno por técnico', corta: 'Por técnico' },
+  E: { etiqueta: 'De la empresa', corta: 'Taller' },
+  V: { etiqueta: 'En la camioneta', corta: 'Camioneta' },
+}
+
+export const ESTADOS_EXISTENCIA: Record<
+  EstadoExistencia,
+  { etiqueta: string; corta: string; punto: string; pastilla: string; borde: string }
+> = {
+  tiene: {
+    etiqueta: 'Lo tenemos', corta: 'Tenemos',
+    punto: 'bg-verde', pastilla: 'bg-verde/12 text-verde', borde: 'border-l-verde',
+  },
+  falta: {
+    etiqueta: 'Falta', corta: 'Falta',
+    punto: 'bg-naranja', pastilla: 'bg-naranja/12 text-naranja', borde: 'border-l-naranja',
+  },
+  agotado: {
+    etiqueta: 'Se acabó o se gastó', corta: 'Se acabó',
+    punto: 'bg-laton', pastilla: 'bg-laton/12 text-laton-dk', borde: 'border-l-laton',
+  },
+  baja: {
+    etiqueta: 'Dado de baja', corta: 'De baja',
+    punto: 'bg-linea-2', pastilla: 'bg-tinte text-faint', borde: 'border-l-linea-2',
+  },
+}
+
+/** Primero lo que hay que resolver; al final lo que ya no molesta. */
+export const ORDEN_EXISTENCIA: EstadoExistencia[] = ['falta', 'agotado', 'tiene', 'baja']
+
+export const ESTADOS_COTIZACION: Record<EstadoCotizacion, string> = {
+  pedida: 'Pedida',
+  recibida: 'Recibida',
+  comprada: 'Comprada',
+  descartada: 'Descartada',
+}

@@ -1,5 +1,5 @@
 import { Suspense, lazy } from 'react'
-import { Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import { Navegacion } from './componentes/Navegacion'
 import { Cargando } from './componentes/ui'
 import { useSesion } from './lib/sesion'
@@ -17,7 +17,9 @@ import { Tarifario } from './paginas/Tarifario'
 import { Rutas } from './paginas/Rutas'
 import { Presupuestos } from './paginas/Presupuestos'
 import { PresupuestoDetalle } from './paginas/PresupuestoDetalle'
-import { Mas } from './paginas/Mas'
+import { Menu } from './paginas/Menu'
+import { Inventario } from './paginas/Inventario'
+import { Equipo } from './paginas/Equipo'
 
 /*
   El mapa arrastra Leaflet: unos 150 KB que no tienen por qué viajar cuando
@@ -35,7 +37,8 @@ export function App() {
   return (
     <>
       <Routes>
-        <Route path="/" element={<Hoy />} />
+        <Route path="/" element={<Menu />} />
+        <Route path="/hoy" element={<Hoy />} />
         <Route path="/prospectos" element={<Prospectos />} />
         <Route path="/prospectos/:id" element={<ProspectoDetalle />} />
         <Route path="/clientes" element={<Clientes />} />
@@ -54,8 +57,11 @@ export function App() {
         <Route path="/tarifario" element={<Tarifario />} />
         <Route path="/presupuestos" element={<Presupuestos />} />
         <Route path="/presupuestos/:id" element={<PresupuestoDetalle />} />
-        <Route path="/mas" element={<Mas />} />
-        <Route path="*" element={<Hoy />} />
+        <Route path="/inventario" element={<Inventario />} />
+        <Route path="/equipo" element={<Equipo />} />
+        {/* La portada reemplazó a «Más»; el enlace viejo sigue llegando. */}
+        <Route path="/mas" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Menu />} />
       </Routes>
       <Navegacion />
     </>

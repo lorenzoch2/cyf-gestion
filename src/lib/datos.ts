@@ -3,6 +3,7 @@ import { db } from './supabase'
 import type {
   Cliente, Contrato, Equipo, LineaPresupuesto, Oportunidad, PrecioTarifario, Presupuesto,
   Prospecto, Ruta, Servicio, Tarea, Tarifario, Visita,
+  CotizacionInsumo, Existencia, Insumo, Tecnico,
 } from './tipos'
 
 /*
@@ -310,4 +311,102 @@ export async function tarifarioQueAplica(clienteId?: string | null, zona?: strin
 export type {
   Cliente, Contrato, Equipo, LineaPresupuesto, Oportunidad, PrecioTarifario, Presupuesto,
   Prospecto, Ruta, Servicio, Tarea, Tarifario, Visita,
+  CotizacionInsumo, Existencia, Insumo, Tecnico,
+}
+
+/* ── Equipo ─────────────────────────────────────────────────────────────── */
+
+export const consultarTecnicos = (soloActivos = false) => {
+  const q = db().from('tecnicos').select('*').order('orden')
+  return soloActivos ? q.eq('activo', true) : q
+}
+
+export const crearTecnico = (tecnico: Partial<Tecnico>) =>
+  db().from('tecnicos').insert(tecnico).select().single()
+
+export const guardarTecnico = (id: string, cambios: Partial<Tecnico>) =>
+  db().from('tecnicos').update(cambios).eq('id', id)
+
+export const borrarTecnico = (id: string) => db().from('tecnicos').delete().eq('id', id)
+
+/* ── Inventario ─────────────────────────────────────────────────────────── */
+
+export const consultarCatalogo = () =>
+  db().from('catalogo_insumos').select('*').eq('activo', true).order('orden')
+
+export const crearInsumo = (insumo: Partial<Insumo>) =>
+  db().from('catalogo_insumos').insert(insumo).select().single()
+
+export const guardarInsumo = (id: string, cambios: Partial<Insumo>) =>
+  db().from('catalogo_insumos').update(cambios).eq('id', id)
+
+/** Dar de baja un ítem del catálogo no borra su historia: lo desactiva. */
+export const desactivarInsumo = (id: string) =>
+  db().from('catalogo_insumos').update({ activo: false }).eq('id', id)
+
+export const consultarExistencias = () => db().from('existencias').select('*')
+
+/**
+ * Deja un ítem en un estado para un dueño, haya fila o no.
+ *
+ * No se usa `upsert` porque la unicidad vive en un índice con `coalesce` —en
+ * SQL dos nulos no son iguales, y «sin asignar» tiene que contar como dueño—,
+ * y `upsert` necesita una restricción con nombre sobre columnas simples.
+ */
+export async function fijarExistencia(
+  insumoId: string,
+  tecnicoId: string | null,
+  cambios: Partial<Existencia>,
+) {
+  const busca = db().from('existencias').select('id').eq('insumo_id', insumoId)
+  const { data } = await (tecnicoId
+    ? busca.eq('tecnico_id', tecnicoId)
+    : busca.is('tecnico_id', null)
+  ).maybeSingle()
+
+  const fila = { ...cambios, actualizado_en: new Date().toISOString() }
+  if (data) return db().from('existencias').update(fila).eq('id', (data as { id: string }).id)
+  return db()
+    .from('existencias')
+    .insert({ insumo_id: insumoId, tecnico_id: tecnicoId, estado: 'falta', ...fila })
+}
+
+export const asignarExistencia = (id: string, tecnicoId: string | null) =>
+  db()
+    .from('existencias')
+    .update({ tecnico_id: tecnicoId, actualizado_en: new Date().toISOString() })
+    .eq('id', id)
+
+/* ── Cotizaciones de insumos ────────────────────────────────────────────── */
+
+export const consultarCotizacionesInsumo = (insumoId?: string) => {
+  const q = db().from('cotizaciones_insumo').select('*').order('fecha', { ascending: false })
+  return insumoId ? q.eq('insumo_id', insumoId) : q
+}
+
+export const crearCotizacionInsumo = (cotizacion: Partial<CotizacionInsumo>) =>
+  db().from('cotizaciones_insumo').insert(cotizacion).select().single()
+
+export const guardarCotizacionInsumo = (id: string, cambios: Partial<CotizacionInsumo>) =>
+  db().from('cotizaciones_insumo').update(cambios).eq('id', id)
+
+export const borrarCotizacionInsumo = (id: string) =>
+  db().from('cotizaciones_insumo').delete().eq('id', id)
+
+/**
+ * Marcar una cotización como comprada deja el ítem en «lo tenemos».
+ *
+ * Es el gesto que cierra el circuito: se cotizó, se compró, está. Hacerlo en
+ * dos pantallas distintas garantizaba que la segunda se olvidara.
+ */
+export async function marcarComprada(
+  cotizacion: CotizacionInsumo,
+  tecnicoId: string | null,
+) {
+  await guardarCotizacionInsumo(cotizacion.id, { estado: 'comprada' })
+  return fijarExistencia(cotizacion.insumo_id, tecnicoId, {
+    estado: 'tiene',
+    cantidad: cotizacion.cantidad,
+    valor: cotizacion.precio_neto,
+  })
 }

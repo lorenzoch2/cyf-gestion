@@ -34,6 +34,8 @@ src/
     formato.ts          # pesos, fechas, distancias, enlaces de teléfono y mapa
     ruteo.ts            # el recorrido trazado por las calles (Valhalla/OSM)
     pdf.ts              # el presupuesto en PDF, compuesto en el navegador
+    ruteo.ts            # el recorrido trazado por las calles (Valhalla/OSM)
+    cuentas.ts          # pedirle a la función de Netlify que cree un usuario
   componentes/          # ui.tsx (piezas), Navegacion.tsx, iconos.tsx
   paginas/              # una por pantalla
 ```
@@ -100,3 +102,45 @@ src/
   nuevo, revisar que no choque con `04 Comercial/Presupuestos/_Registro de presupuestos.md`.
 - Los prospectos vienen de OpenStreetMap con licencia ODbL: si alguna vez se publican, hay que
   atribuir la fuente.
+
+## Inventario y dotación
+
+- **El catálogo se genera, no se escribe a mano.** `herramientas/catalogo.py` es la fuente de los
+  153 ítems: de ahí salen `supabase/seed-dotacion.sql` y la hoja imprimible que vive en la carpeta
+  de la empresa. Editar el catálogo es editar ese script y volver a correrlo.
+- **Cada ítem tiene un ámbito.** `T` se repite por técnico, `E` es de la empresa y `V` vive en la
+  camioneta. Sin esa distinción la pregunta «¿tienen los dos lo mismo?» no se puede responder, que
+  es justamente para lo que se hizo el módulo.
+- **Un técnico no es una cuenta de acceso.** Francisco tiene dotación aunque nunca entre a la app.
+  La tabla `tecnicos` guarda personas; `usuario_id` enlaza con una cuenta sólo si algún día existe.
+  Mezclarlas obligaría a crear una cuenta para poder registrar una caja de herramientas.
+- **`tecnico_id` nulo significa «de la empresa, sin asignar»**, y es un dueño más. Así entró tal
+  cual el inventario de junio de 2026, que nunca dijo de quién era cada herramienta. Por eso la
+  unicidad va en un índice con `coalesce`: en SQL dos nulos no son iguales, y aquí tienen que
+  serlo.
+- **Un ítem sin fila de existencia se muestra como «falta»**, no como error. Nadie va a crear 153
+  filas antes de empezar a usar la pantalla.
+- **Los estados son cuatro y separan tenencia de compra**: `tiene`, `falta`, `agotado` (se usó o se
+  gastó) y `baja`. El avance de la compra vive aparte, en `cotizaciones_insumo`; marcar una
+  cotización como comprada es lo que deja el ítem en «tiene», en un solo gesto y no en dos
+  pantallas.
+- **Las referencias técnicas del catálogo citan el curso de la Unidad Ozono** (Ministerio del Medio
+  Ambiente, 2018), que está en la carpeta de la empresa. Lo que la norma exige —recuperadora,
+  cilindro de recuperación, vacío bajo 500 micrones— va marcado como crítico y no es opinión.
+
+## La portada
+
+La barra de abajo lleva cinco destinos porque son los que caben bajo el pulgar. **Cuando aparece un
+módulo nuevo va al menú de la portada, no a la barra.** `/` es el menú y `/hoy` la pantalla del día;
+`/mas` quedó redirigido para que no se rompan los enlaces viejos.
+
+## Crear cuentas
+
+La llave `service_role` de Supabase puede leer y escribir cualquier tabla saltándose las políticas.
+**Nunca entra al navegador ni al repositorio.** Vive en las variables de entorno de Netlify y sólo
+la toca `netlify/functions/crear-usuario.mts`, que corre en el servidor y además exige que quien
+llama venga con una sesión válida de la app. En desarrollo la función no existe y la pantalla lo
+dice en vez de fallar en silencio.
+
+Variables que hay que configurar en Netlify (Site configuration → Environment variables):
+`SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` y `SUPABASE_SERVICE_ROLE_KEY`.
