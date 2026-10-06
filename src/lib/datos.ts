@@ -5,6 +5,7 @@ import type {
   Prospecto, Ruta, Servicio, Tarea, Tarifario, Visita,
   CotizacionInsumo, Existencia, Insumo, Tecnico,
   LineaOrden, Mantencion, OrdenCompra, Proveedor,
+  FotoInforme, Hallazgo, Informe, InformeEquipo, MaterialInforme,
 } from './tipos'
 
 /*
@@ -321,6 +322,7 @@ export type {
   Prospecto, Ruta, Servicio, Tarea, Tarifario, Visita,
   CotizacionInsumo, Existencia, Insumo, Tecnico,
   LineaOrden, Mantencion, OrdenCompra, Proveedor,
+  FotoInforme, Hallazgo, Informe, InformeEquipo, MaterialInforme,
 }
 
 /* ── Equipo ─────────────────────────────────────────────────────────────── */
@@ -623,4 +625,119 @@ export async function cerrarMantencion(
     estado: 'programada',
   })
   return data as Mantencion | null
+}
+
+/* ── Informes de cierre ─────────────────────────────────────────────────── */
+
+export const consultarInformes = () =>
+  db().from('informes').select('*').order('fecha', { ascending: false })
+
+export const consultarInforme = (id: string) =>
+  db().from('informes').select('*').eq('id', id).single()
+
+export const crearInforme = (informe: Partial<Informe>) =>
+  db().from('informes').insert(informe).select().single()
+
+export const guardarInforme = (id: string, cambios: Partial<Informe>) =>
+  db()
+    .from('informes')
+    .update({ ...cambios, actualizado_en: new Date().toISOString() })
+    .eq('id', id)
+
+export const borrarInforme = (id: string) => db().from('informes').delete().eq('id', id)
+
+/** Los informes siguen la numeración de la empresa: AAAA-NNN. */
+export async function siguienteNumeroInforme(): Promise<string> {
+  const anio = new Date().getFullYear()
+  const { data } = await db()
+    .from('informes')
+    .select('numero')
+    .like('numero', `${anio}-%`)
+    .order('numero', { ascending: false })
+    .limit(1)
+  const ultimo = data?.[0]?.numero as string | undefined
+  const correlativo = ultimo ? Number(ultimo.split('-')[1]) + 1 : 1
+  return `${anio}-${String(correlativo).padStart(3, '0')}`
+}
+
+export const consultarInformeEquipos = (informeId: string) =>
+  db().from('informe_equipos').select('*').eq('informe_id', informeId).order('orden')
+
+export const crearInformeEquipo = (bloque: Partial<InformeEquipo>) =>
+  db().from('informe_equipos').insert(bloque).select().single()
+
+export const guardarInformeEquipo = (id: string, cambios: Partial<InformeEquipo>) =>
+  db().from('informe_equipos').update(cambios).eq('id', id)
+
+export const borrarInformeEquipo = (id: string) =>
+  db().from('informe_equipos').delete().eq('id', id)
+
+export const consultarHallazgos = (informeId: string) =>
+  db().from('informe_hallazgos').select('*').eq('informe_id', informeId).order('creado_en')
+
+export const crearHallazgo = (hallazgo: Partial<Hallazgo>) =>
+  db().from('informe_hallazgos').insert(hallazgo).select().single()
+
+export const guardarHallazgo = (id: string, cambios: Partial<Hallazgo>) =>
+  db().from('informe_hallazgos').update(cambios).eq('id', id)
+
+export const borrarHallazgo = (id: string) =>
+  db().from('informe_hallazgos').delete().eq('id', id)
+
+export const consultarMateriales = (informeId: string) =>
+  db().from('informe_materiales').select('*').eq('informe_id', informeId)
+
+export const crearMaterial = (material: Partial<MaterialInforme>) =>
+  db().from('informe_materiales').insert(material).select().single()
+
+export const borrarMaterial = (id: string) =>
+  db().from('informe_materiales').delete().eq('id', id)
+
+export const consultarFotos = (informeId: string) =>
+  db().from('informe_fotos').select('*').eq('informe_id', informeId).order('orden')
+
+export const crearFoto = (foto: Partial<FotoInforme>) =>
+  db().from('informe_fotos').insert(foto).select().single()
+
+export const borrarFotoFila = (id: string) => db().from('informe_fotos').delete().eq('id', id)
+
+/**
+ * Emitir el informe: se cierra, y lo que arrastra se mueve solo.
+ *
+ * Los consumibles que se usaron bajan del inventario —quedan en «se acabó»
+ * cuando no queda nada registrado—, y si el informe venía de una mantención
+ * programada, esa mantención queda cerrada con su siguiente ya agendada. Hacer
+ * estas tres cosas en pantallas separadas garantizaba que dos se olvidaran.
+ */
+export async function emitirInforme(
+  informe: Informe,
+  materiales: MaterialInforme[],
+  mantencion?: Mantencion | null,
+) {
+  await guardarInforme(informe.id, { estado: 'emitido' })
+
+  for (const m of materiales.filter(x => x.insumo_id)) {
+    const { data } = await db()
+      .from('existencias')
+      .select('id, cantidad')
+      .eq('insumo_id', m.insumo_id as string)
+      .is('tecnico_id', null)
+      .maybeSingle()
+    if (!data) continue
+    const fila = data as { id: string; cantidad: number }
+    const queda = Math.max(0, Number(fila.cantidad) - Number(m.cantidad))
+    await db()
+      .from('existencias')
+      .update({
+        cantidad: queda,
+        estado: queda === 0 ? 'agotado' : 'tiene',
+        actualizado_en: new Date().toISOString(),
+      })
+      .eq('id', fila.id)
+  }
+
+  if (mantencion && mantencion.estado === 'programada') {
+    return cerrarMantencion(mantencion, informe.fecha, informe.resumen ?? undefined)
+  }
+  return null
 }

@@ -515,3 +515,193 @@ export const FRECUENCIAS: [string, string][] = [
   ['6', 'Cada seis meses'],
   ['12', 'Una vez al año'],
 ]
+
+/* ── Informes de cierre ─────────────────────────────────────────────────── */
+
+export type TipoInforme = 'preventiva' | 'correctivo' | 'instalacion' | 'diagnostico'
+export type NivelHallazgo = 'observacion' | 'atencion' | 'urgente'
+export type MomentoFoto = 'antes' | 'despues' | 'otro'
+
+export interface Informe {
+  id: string
+  numero: string | null
+  cliente_id: string | null
+  mantencion_id: string | null
+  tecnico_id: string | null
+  tipo: TipoInforme
+  fecha: string
+  hora_entrada: string | null
+  hora_salida: string | null
+  resumen: string | null
+  recomendacion: string | null
+  proxima_visita: string | null
+  recibe_nombre: string | null
+  recibe_cargo: string | null
+  conforme: boolean | null
+  firma: string | null
+  estado: 'borrador' | 'emitido'
+  creado_en: string
+}
+
+export interface InformeEquipo {
+  id: string
+  informe_id: string
+  equipo_id: string | null
+  descripcion: string | null
+  trabajo: string[]
+  mediciones: Record<string, string>
+  gas_tipo: string | null
+  gas_recuperado: number | null
+  gas_cargado: number | null
+  nota: string | null
+  orden: number
+}
+
+export interface Hallazgo {
+  id: string
+  informe_id: string
+  equipo_id: string | null
+  nivel: NivelHallazgo
+  detalle: string
+  presupuesto_id: string | null
+}
+
+export interface MaterialInforme {
+  id: string
+  informe_id: string
+  insumo_id: string | null
+  descripcion: string
+  cantidad: number
+  unidad: string
+}
+
+export interface FotoInforme {
+  id: string
+  informe_id: string
+  equipo_id: string | null
+  ruta: string
+  momento: MomentoFoto
+  nota: string | null
+  orden: number
+}
+
+export const TIPOS_INFORME: Record<TipoInforme, string> = {
+  preventiva: 'Mantención preventiva',
+  correctivo: 'Correctivo',
+  instalacion: 'Instalación',
+  diagnostico: 'Diagnóstico',
+}
+
+export const NIVELES_HALLAZGO: Record<
+  NivelHallazgo,
+  { etiqueta: string; corta: string; pastilla: string }
+> = {
+  observacion: {
+    etiqueta: 'Observación, para la próxima visita', corta: 'Observación',
+    pastilla: 'bg-tinte text-mut',
+  },
+  atencion: {
+    etiqueta: 'Requiere atención, hay que programarlo', corta: 'Atención',
+    pastilla: 'bg-laton/12 text-laton-dk',
+  },
+  urgente: {
+    etiqueta: 'Urgente, hay riesgo de falla o de seguridad', corta: 'Urgente',
+    pastilla: 'bg-rojo/12 text-rojo',
+  },
+}
+
+export const MOMENTOS_FOTO: Record<MomentoFoto, string> = {
+  antes: 'Antes',
+  despues: 'Después',
+  otro: 'Otra',
+}
+
+/*
+  La lista de lo que se hace y lo que se mide cambia con la máquina: un split
+  no tiene deshielo y una cámara no entrega caudal. Por eso vive aquí como
+  datos y no repartida en la pantalla.
+*/
+export type FamiliaEquipo = 'climatizacion' | 'refrigeracion' | 'ventilacion'
+
+export const FAMILIAS: Record<FamiliaEquipo, string> = {
+  climatizacion: 'Climatización',
+  refrigeracion: 'Refrigeración comercial',
+  ventilacion: 'Ventilación',
+}
+
+export const TAREAS_POR_FAMILIA: Record<FamiliaEquipo, string[]> = {
+  climatizacion: [
+    'Lavado de serpentín evaporador',
+    'Lavado de serpentín condensador',
+    'Filtros lavados',
+    'Filtros cambiados',
+    'Drenaje despejado y probado',
+    'Bandeja limpia y desinfectada',
+    'Aislación de cañería revisada',
+    'Revisión eléctrica y de contactores',
+    'Fijaciones y soportes revisados',
+    'Control remoto y termostato probados',
+  ],
+  refrigeracion: [
+    'Limpieza de condensador',
+    'Limpieza de evaporador',
+    'Deshielo y resistencias probados',
+    'Burletes y cierre de puertas',
+    'Desagüe de bandeja despejado',
+    'Control de temperatura verificado',
+    'Revisión eléctrica y de contactores',
+    'Ventiladores y motores revisados',
+  ],
+  ventilacion: [
+    'Filtros lavados o cambiados',
+    'Correas revisadas o cambiadas',
+    'Rodamientos lubricados',
+    'Limpieza de rejillas y difusores',
+    'Limpieza de ductos accesibles',
+    'Revisión eléctrica del motor',
+  ],
+}
+
+export const MEDICIONES_POR_FAMILIA: Record<
+  FamiliaEquipo,
+  { clave: string; etiqueta: string; unidad: string }[]
+> = {
+  climatizacion: [
+    { clave: 'aire_entrada', etiqueta: 'Aire de entrada', unidad: '°C' },
+    { clave: 'aire_salida', etiqueta: 'Aire de salida', unidad: '°C' },
+    { clave: 'presion_baja', etiqueta: 'Presión de baja', unidad: 'psi' },
+    { clave: 'presion_alta', etiqueta: 'Presión de alta', unidad: 'psi' },
+    { clave: 'sobrecalentamiento', etiqueta: 'Sobrecalentamiento', unidad: 'K' },
+    { clave: 'subenfriamiento', etiqueta: 'Subenfriamiento', unidad: 'K' },
+    { clave: 'consumo', etiqueta: 'Consumo del compresor', unidad: 'A' },
+    { clave: 'consumo_placa', etiqueta: 'Consumo de placa', unidad: 'A' },
+    { clave: 'tension', etiqueta: 'Tensión', unidad: 'V' },
+  ],
+  refrigeracion: [
+    { clave: 'consigna', etiqueta: 'Temperatura de consigna', unidad: '°C' },
+    { clave: 'temperatura', etiqueta: 'Temperatura real', unidad: '°C' },
+    { clave: 'evaporacion', etiqueta: 'Temperatura de evaporación', unidad: '°C' },
+    { clave: 'condensacion', etiqueta: 'Temperatura de condensación', unidad: '°C' },
+    { clave: 'sobrecalentamiento', etiqueta: 'Sobrecalentamiento', unidad: 'K' },
+    { clave: 'consumo', etiqueta: 'Consumo del compresor', unidad: 'A' },
+  ],
+  ventilacion: [
+    { clave: 'caudal', etiqueta: 'Caudal medido', unidad: 'm³/h' },
+    { clave: 'velocidad', etiqueta: 'Velocidad en rejilla', unidad: 'm/s' },
+    { clave: 'consumo', etiqueta: 'Consumo del motor', unidad: 'A' },
+  ],
+}
+
+/**
+ * Lo que se mide cuando se abre el circuito.
+ *
+ * Son los números del procedimiento del curso de la Unidad Ozono: nitrógeno a
+ * 50 psi para la prueba de hermeticidad y vacío bajo 500 micrones. Van aparte
+ * porque sólo aplican a correctivos e instalaciones.
+ */
+export const MEDICIONES_CIRCUITO = [
+  { clave: 'nitrogeno_psi', etiqueta: 'Nitrógeno, presión de prueba', unidad: 'psi' },
+  { clave: 'nitrogeno_min', etiqueta: 'Nitrógeno, tiempo sostenido', unidad: 'min' },
+  { clave: 'vacio_micrones', etiqueta: 'Vacío alcanzado', unidad: 'micrones' },
+  { clave: 'vacio_min', etiqueta: 'Vacío, tiempo', unidad: 'min' },
+]

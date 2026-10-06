@@ -37,6 +37,7 @@ const GRUPOS: { titulo: string; items: { a: string; titulo: string; detalle: str
     titulo: 'Operación',
     items: [
       { a: '/mantenciones', titulo: 'Mantenciones', detalle: 'Las visitas programadas y lo que está atrasado' },
+      { a: '/informes', titulo: 'Informes de cierre', detalle: 'El trabajo medido y documentado, con firma' },
       { a: '/inventario', titulo: 'Inventario', detalle: 'Qué hay, qué falta y qué se acabó' },
       { a: '/compras', titulo: 'Compras', detalle: 'Órdenes de compra y proveedores' },
       { a: '/equipo', titulo: 'Equipo', detalle: 'Las personas y su dotación' },

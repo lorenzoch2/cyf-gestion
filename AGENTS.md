@@ -185,3 +185,31 @@ otra. Lo único que hay que agregar en Netlify es `SUPABASE_SECRET_KEY` (Project
 **Si Vite dice que un módulo «does not provide an export» que sí existe, reinicia el servidor.**
 Agregar exports a `datos.ts` con el servidor corriendo deja la transformación vieja cacheada y el
 error sobrevive incluso a recargar la página. `rm -rf node_modules/.vite` y volver a levantar.
+
+## Informes de cierre
+
+- **Uno por visita, no por equipo.** En un minimarket con cuatro splits y un visicooler sale un
+  documento con cinco bloques adentro. Emitir cinco informes por una visita es la forma más rápida
+  de que nadie los lea.
+- **Las mediciones son opcionales, a propósito.** Hoy faltan la pinza amperimétrica, el vacuómetro
+  y el anemómetro; un formulario obligatorio que no se puede llenar termina con gente inventando
+  números. Las secciones vacías no se dibujan en el PDF.
+- **La lista de tareas y de mediciones vive en `tipos.ts`, por familia de equipo.** Un split no
+  tiene deshielo y una cámara no entrega caudal. La familia se deduce del tipo de equipo con una
+  expresión regular — si aparece un tipo que no calza, cae en climatización.
+- **El refrigerante va en el bloque del equipo, no en una tabla aparte.** Se mueve por máquina, y es
+  el dato que la NCh 3241 espera que se pueda demostrar: el PDF imprime la línea que dice que el gas
+  fue a un cilindro y no a la atmósfera.
+- **La firma se guarda como data URL en una columna de texto**, no en el almacenamiento. Son unos
+  10 KB, y así cerrar en terreno no depende de que el bucket responda, que es justo donde la señal
+  falla.
+- **Las fotos sí van al almacenamiento, en un bucket privado.** Una foto del interior de un local es
+  del cliente, no del internet: se guarda la ruta y la app baja el archivo con la sesión de quien
+  mira. Se comprimen antes de subir —1600 px de lado largo, calidad 0,72— porque la subida ocurre
+  con la señal de un local y porque esas mismas imágenes entran al PDF.
+- **Emitir el informe mueve tres cosas de una vez**: lo cierra, descuenta del inventario los
+  consumibles usados y cierra la mantención programada que lo originó, con su siguiente ya agendada.
+  Repartirlo en tres pantallas garantizaba que dos se olvidaran.
+- **Los hallazgos son la razón comercial del informe.** De ahí sale el próximo presupuesto: una
+  mantención de $38.000 se convierte en un trabajo de $300.000 porque alguien anotó que el
+  condensador estaba tapado.

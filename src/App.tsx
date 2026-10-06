@@ -24,12 +24,21 @@ import { Compras } from './paginas/Compras'
 import { CompraDetalle } from './paginas/CompraDetalle'
 import { Proveedores } from './paginas/Proveedores'
 import { Mantenciones } from './paginas/Mantenciones'
+import { Informes } from './paginas/Informes'
 
 /*
   El mapa arrastra Leaflet: unos 150 KB que no tienen por qué viajar cuando
   se abre la app para mirar un pendiente. Se carga al entrar a la pantalla.
 */
 const Mapa = lazy(() => import('./paginas/Mapa').then(m => ({ default: m.Mapa })))
+
+/*
+  La ficha del informe arrastra jsPDF y las tipografías incrustadas: 130 KB
+  comprimidos que no tienen por qué viajar para mirar un pendiente.
+*/
+const InformeDetalle = lazy(() =>
+  import('./paginas/InformeDetalle').then(m => ({ default: m.InformeDetalle })),
+)
 
 export function App() {
   const { sesion, cargando } = useSesion()
@@ -67,6 +76,15 @@ export function App() {
         <Route path="/compras/:id" element={<CompraDetalle />} />
         <Route path="/proveedores" element={<Proveedores />} />
         <Route path="/mantenciones" element={<Mantenciones />} />
+        <Route path="/informes" element={<Informes />} />
+        <Route
+          path="/informes/:id"
+          element={
+            <Suspense fallback={<Cargando />}>
+              <InformeDetalle />
+            </Suspense>
+          }
+        />
         {/* La portada reemplazó a «Más»; el enlace viejo sigue llegando. */}
         <Route path="/mas" element={<Navigate to="/" replace />} />
         <Route path="*" element={<Menu />} />
