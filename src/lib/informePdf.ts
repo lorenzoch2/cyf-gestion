@@ -6,7 +6,8 @@ import lockup from '../assets/marca/lockup-horizontal.png?url'
 import { fechaCorta } from './formato'
 import { leerFoto } from './fotos'
 import {
-  MEDICIONES_CIRCUITO, MEDICIONES_POR_FAMILIA, MOMENTOS_FOTO, NIVELES_HALLAZGO, TIPOS_INFORME,
+  MEDICIONES_CIRCUITO, MEDICIONES_POR_FAMILIA, MOMENTOS_FOTO, NIVELES_HALLAZGO, TIPOS_EQUIPO,
+  TIPOS_INFORME,
   type Cliente, type Equipo, type FamiliaEquipo, type FotoInforme, type Hallazgo, type Informe,
   type InformeEquipo, type MaterialInforme, type Tecnico,
 } from './tipos'
@@ -183,8 +184,9 @@ export async function generarInformePdf({
     const equipo = equipos.find(e => e.id === bloque.equipo_id)
     const nombre =
       bloque.descripcion ??
-      [equipo?.tipo, equipo?.marca, equipo?.capacidad].filter(Boolean).join(' · ') ??
-      'Equipo'
+      [equipo && (TIPOS_EQUIPO[equipo.tipo] ?? equipo.tipo), equipo?.marca, equipo?.capacidad]
+        .filter(Boolean)
+        .join(' · ')
 
     sitio(20)
     y += 2
@@ -209,7 +211,12 @@ export async function generarInformePdf({
         const x = MARGEN + i * (UTIL / 2)
         for (const tarea of columna) {
           sitio(6)
-          texto('✓', x, yCol, { fuente: 'PlexMono', tam: 8, color: ACERO })
+          // El visto se dibuja con dos líneas y no con «✓»: la tipografía de la
+          // marca no trae ese glifo y en el PDF no salía nada.
+          doc.setDrawColor(...ACERO)
+          doc.setLineWidth(0.45)
+          doc.line(x, yCol - 1.5, x + 1, yCol - 0.5)
+          doc.line(x + 1, yCol - 0.5, x + 2.8, yCol - 2.8)
           texto(tarea, x + 4.5, yCol, { tam: 8.5, color: MUT })
           yCol += 4.4
         }
@@ -327,9 +334,12 @@ export async function generarInformePdf({
     if (dataUrl) conImagen.push({ foto: f, dataUrl })
   }
   if (conImagen.length > 0) {
-    titulo('REGISTRO FOTOGRÁFICO')
     const anchoFoto = (UTIL - 6) / 2
     const altoFoto = anchoFoto * 0.72
+    // El título tiene que saltar de página junto con la primera foto, o queda
+    // anunciando algo que está en la hoja siguiente.
+    sitio(altoFoto + 24)
+    titulo('REGISTRO FOTOGRÁFICO')
     for (let i = 0; i < conImagen.length; i += 2) {
       sitio(altoFoto + 10)
       conImagen.slice(i, i + 2).forEach((item, j) => {

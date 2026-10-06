@@ -15,7 +15,7 @@ import { borrarFoto, leerFoto, subirFoto } from '../lib/fotos'
 import { fechaCorta } from '../lib/formato'
 import {
   MEDICIONES_CIRCUITO, MEDICIONES_POR_FAMILIA, MOMENTOS_FOTO, NIVELES_HALLAZGO,
-  TAREAS_POR_FAMILIA, TIPOS_INFORME,
+  TAREAS_POR_FAMILIA, TIPOS_EQUIPO, TIPOS_INFORME,
   type Cliente, type Equipo, type FamiliaEquipo, type FotoInforme, type Hallazgo, type Informe,
   type InformeEquipo, type Insumo, type MaterialInforme, type MomentoFoto, type NivelHallazgo,
 } from '../lib/tipos'
@@ -62,12 +62,20 @@ export function InformeDetalle() {
   const fotos = useConsulta<FotoInforme[]>(() => consultarFotos(id), [id])
 
   const i = informe.datos
+
+  /*
+    El cliente llega en el informe, así que estas dos consultas corren una
+    primera vez sin tener a quién preguntar. Pedirle a la base por un id vacío
+    no devuelve nada útil y además responde 400 —el id es un uuid—, así que se
+    espera: sin cliente, resultado vacío y sin viaje.
+  */
+  const vacio = <T,>() => Promise.resolve({ data: null as T | null, error: null })
   const cliente = useConsulta<Cliente>(
-    () => consultarCliente(i?.cliente_id ?? ''),
+    () => (i?.cliente_id ? consultarCliente(i.cliente_id) : vacio<Cliente>()),
     [i?.cliente_id],
   )
   const equipos = useConsulta<Equipo[]>(
-    () => consultarEquipos(i?.cliente_id ?? ''),
+    () => (i?.cliente_id ? consultarEquipos(i.cliente_id) : vacio<Equipo[]>()),
     [i?.cliente_id],
   )
 
@@ -368,7 +376,14 @@ export function InformeDetalle() {
         textoAceptar="Borrar"
         peligro
         alAceptar={() => {
-          void borrarInforme(id).then(() => navegar('/informes'))
+          // Las fotos viven en el almacenamiento y no las arrastra el borrado en
+          // cascada de la base: si no se sacan aquí, quedan ocupando espacio sin
+          // que nada las referencie.
+          void (async () => {
+            for (const f of fotos.datos ?? []) await borrarFoto(f.ruta)
+            await borrarInforme(id)
+            navegar('/informes')
+          })()
         }}
         alCerrar={() => setConfirmando(null)}
       />
@@ -395,27 +410,60 @@ function BloqueEquipo({
   const tareas = TAREAS_POR_FAMILIA[familia]
   const mediciones = [...MEDICIONES_POR_FAMILIA[familia], ...MEDICIONES_CIRCUITO]
 
+  /*
+    Lo marcado vive en una referencia y no sólo en las props.
+
+    Tocar tres mediciones seguidas dispara tres guardados casi a la vez, y si
+    cada uno arma el objeto a partir de las props —que todavía no se han
+    recargado— el último pisa a los dos anteriores. Con la referencia cada
+    guardado parte de lo que dejó el anterior. Pasó de verdad: de tres
+    mediciones llegó una sola a la base.
+  */
+  const vivo = useRef({
+    trabajo: bloque.trabajo ?? [],
+    mediciones: bloque.mediciones ?? {},
+  })
+  const [vista, setVista] = useState(vivo.current)
+
+  /*
+    Y además se guardan de a uno.
+
+    Con la referencia cada guardado ya parte de lo que dejó el anterior, pero
+    si salen cuatro a la vez pueden llegar desordenados y gana el que alcance
+    a escribir último, que no es el más completo. La cola los manda en fila.
+  */
+  const cola = useRef<Promise<unknown>>(Promise.resolve())
+
+  function asentar(cambio: Partial<typeof vivo.current>) {
+    vivo.current = { ...vivo.current, ...cambio }
+    setVista(vivo.current)
+    cola.current = cola.current
+      .then(() => guardarInformeEquipo(bloque.id, cambio))
+      .then(() => alGuardar())
+    return cola.current
+  }
+
   const nombre =
     bloque.descripcion ??
-    [equipo?.tipo, equipo?.marca, equipo?.capacidad].filter(Boolean).join(' · ')
+    [equipo && (TIPOS_EQUIPO[equipo.tipo] ?? equipo.tipo), equipo?.marca, equipo?.capacidad]
+      .filter(Boolean)
+      .join(' · ')
 
-  async function alternarTarea(tarea: string) {
-    const hechas = bloque.trabajo.includes(tarea)
-      ? bloque.trabajo.filter(t => t !== tarea)
-      : [...bloque.trabajo, tarea]
-    await guardarInformeEquipo(bloque.id, { trabajo: hechas })
-    alGuardar()
+  function alternarTarea(tarea: string) {
+    const hechas = vivo.current.trabajo.includes(tarea)
+      ? vivo.current.trabajo.filter(t => t !== tarea)
+      : [...vivo.current.trabajo, tarea]
+    void asentar({ trabajo: hechas })
   }
 
-  async function fijarMedicion(clave: string, valor: string) {
-    const nuevas = { ...bloque.mediciones }
+  function fijarMedicion(clave: string, valor: string) {
+    const nuevas = { ...vivo.current.mediciones }
     if (valor) nuevas[clave] = valor
     else delete nuevas[clave]
-    await guardarInformeEquipo(bloque.id, { mediciones: nuevas })
-    alGuardar()
+    void asentar({ mediciones: nuevas })
   }
 
-  const medidas = Object.keys(bloque.mediciones ?? {}).length
+  const medidas = Object.keys(vista.mediciones).length
 
   return (
     <Tarjeta className="p-3">
@@ -424,7 +472,7 @@ function BloqueEquipo({
           <div className="min-w-0">
             <p className="truncate font-medium">{nombre || 'Equipo'}</p>
             <p className="font-mono text-xs text-faint">
-              {bloque.trabajo.length} de {tareas.length} tareas
+              {vista.trabajo.length} de {tareas.length} tareas
               {medidas > 0 && ` · ${medidas} mediciones`}
             </p>
           </div>
@@ -436,12 +484,12 @@ function BloqueEquipo({
         <div className="mt-3 space-y-3 border-t border-linea pt-3">
           <ul className="space-y-1.5">
             {tareas.map(t => {
-              const hecha = bloque.trabajo.includes(t)
+              const hecha = vista.trabajo.includes(t)
               return (
                 <li key={t}>
                   <button
                     disabled={bloqueado}
-                    onClick={() => void alternarTarea(t)}
+                    onClick={() => alternarTarea(t)}
                     className="flex w-full items-center gap-2.5 text-left text-sm"
                   >
                     <span
@@ -476,8 +524,8 @@ function BloqueEquipo({
                   type="number"
                   inputMode="decimal"
                   disabled={bloqueado}
-                  defaultValue={bloque.mediciones?.[m.clave] ?? ''}
-                  onBlur={e => void fijarMedicion(m.clave, e.target.value)}
+                  defaultValue={vivo.current.mediciones[m.clave] ?? ''}
+                  onBlur={e => fijarMedicion(m.clave, e.target.value)}
                 />
               ))}
             </div>
@@ -697,7 +745,12 @@ function HojaAgregarEquipo({
             ['', 'Otro, escribirlo abajo'],
             ...libres.map(
               e =>
-                [e.id, [e.tipo, e.marca, e.ubicacion].filter(Boolean).join(' · ')] as [string, string],
+                [
+                  e.id,
+                  [TIPOS_EQUIPO[e.tipo] ?? e.tipo, e.marca, e.ubicacion]
+                    .filter(Boolean)
+                    .join(' · '),
+                ] as [string, string],
             ),
           ]}
           value={equipoId}
