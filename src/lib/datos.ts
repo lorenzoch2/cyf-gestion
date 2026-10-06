@@ -4,6 +4,7 @@ import type {
   Cliente, Contrato, Equipo, LineaPresupuesto, Oportunidad, PrecioTarifario, Presupuesto,
   Prospecto, Ruta, Servicio, Tarea, Tarifario, Visita,
   CotizacionInsumo, Existencia, Insumo, Tecnico,
+  LineaOrden, OrdenCompra, Proveedor,
 } from './tipos'
 
 /*
@@ -312,6 +313,7 @@ export type {
   Cliente, Contrato, Equipo, LineaPresupuesto, Oportunidad, PrecioTarifario, Presupuesto,
   Prospecto, Ruta, Servicio, Tarea, Tarifario, Visita,
   CotizacionInsumo, Existencia, Insumo, Tecnico,
+  LineaOrden, OrdenCompra, Proveedor,
 }
 
 /* ── Equipo ─────────────────────────────────────────────────────────────── */
@@ -409,4 +411,139 @@ export async function marcarComprada(
     cantidad: cotizacion.cantidad,
     valor: cotizacion.precio_neto,
   })
+}
+
+/* ── Proveedores ────────────────────────────────────────────────────────── */
+
+export const consultarProveedores = (soloActivos = false) => {
+  const q = db().from('proveedores').select('*').order('nombre')
+  return soloActivos ? q.eq('activo', true) : q
+}
+
+export const crearProveedor = (proveedor: Partial<Proveedor>) =>
+  db().from('proveedores').insert(proveedor).select().single()
+
+export const guardarProveedor = (id: string, cambios: Partial<Proveedor>) =>
+  db().from('proveedores').update(cambios).eq('id', id)
+
+export const borrarProveedor = (id: string) => db().from('proveedores').delete().eq('id', id)
+
+/* ── Órdenes de compra ──────────────────────────────────────────────────── */
+
+export const consultarOrdenes = () =>
+  db().from('ordenes_compra').select('*').order('fecha', { ascending: false })
+
+export const consultarOrden = (id: string) =>
+  db().from('ordenes_compra').select('*').eq('id', id).single()
+
+export const crearOrden = (orden: Partial<OrdenCompra>) =>
+  db().from('ordenes_compra').insert(orden).select().single()
+
+export const guardarOrden = (id: string, cambios: Partial<OrdenCompra>) =>
+  db()
+    .from('ordenes_compra')
+    .update({ ...cambios, actualizado_en: new Date().toISOString() })
+    .eq('id', id)
+
+export const borrarOrden = (id: string) => db().from('ordenes_compra').delete().eq('id', id)
+
+export const consultarLineasOrden = (ordenId: string) =>
+  db().from('orden_lineas').select('*').eq('orden_id', ordenId).order('orden')
+
+export const crearLineaOrden = (linea: Partial<LineaOrden>) =>
+  db().from('orden_lineas').insert(linea).select().single()
+
+export const guardarLineaOrden = (id: string, cambios: Partial<LineaOrden>) =>
+  db().from('orden_lineas').update(cambios).eq('id', id)
+
+export const borrarLineaOrden = (id: string) => db().from('orden_lineas').delete().eq('id', id)
+
+/** Las órdenes llevan la misma numeración que los presupuestos: OC AAAA-NNN. */
+export async function siguienteNumeroOrden(): Promise<string> {
+  const anio = new Date().getFullYear()
+  const { data } = await db()
+    .from('ordenes_compra')
+    .select('numero')
+    .like('numero', `${anio}-%`)
+    .order('numero', { ascending: false })
+    .limit(1)
+  const ultimo = data?.[0]?.numero as string | undefined
+  const correlativo = ultimo ? Number(ultimo.split('-')[1]) + 1 : 1
+  return `${anio}-${String(correlativo).padStart(3, '0')}`
+}
+
+/**
+ * Pasa a la orden lo que falta y este proveedor ya cotizó.
+ *
+ * Es el punto donde el inventario y las compras se tocan: si un ítem está en
+ * «falta» o «se acabó» y hay un precio de este proveedor, no tiene sentido
+ * volver a escribirlo a mano.
+ */
+export async function agregarFaltantesDeProveedor(ordenId: string, proveedorId: string) {
+  const [{ data: cotizaciones }, { data: existencias }, { data: catalogo }] = await Promise.all([
+    db().from('cotizaciones_insumo').select('*').eq('proveedor_id', proveedorId),
+    db().from('existencias').select('insumo_id, estado'),
+    db().from('catalogo_insumos').select('id, nombre'),
+  ])
+
+  const tienen = new Set(
+    ((existencias ?? []) as { insumo_id: string; estado: string }[])
+      .filter(e => e.estado === 'tiene')
+      .map(e => e.insumo_id),
+  )
+  const nombres = new Map(
+    ((catalogo ?? []) as { id: string; nombre: string }[]).map(c => [c.id, c.nombre]),
+  )
+
+  // Una sola línea por insumo, con el precio más barato que haya de este proveedor.
+  const mejor = new Map<string, CotizacionInsumo>()
+  for (const c of (cotizaciones ?? []) as CotizacionInsumo[]) {
+    if (c.estado === 'descartada' || tienen.has(c.insumo_id)) continue
+    const previa = mejor.get(c.insumo_id)
+    if (!previa || (c.precio_neto ?? Infinity) < (previa.precio_neto ?? Infinity)) {
+      mejor.set(c.insumo_id, c)
+    }
+  }
+  if (mejor.size === 0) return 0
+
+  const { data: yaEstan } = await db()
+    .from('orden_lineas')
+    .select('insumo_id')
+    .eq('orden_id', ordenId)
+  const puestos = new Set(
+    ((yaEstan ?? []) as { insumo_id: string | null }[]).map(l => l.insumo_id),
+  )
+
+  const lineas = [...mejor.values()]
+    .filter(c => !puestos.has(c.insumo_id))
+    .map((c, i) => ({
+      orden_id: ordenId,
+      insumo_id: c.insumo_id,
+      descripcion: nombres.get(c.insumo_id) ?? 'Insumo',
+      cantidad: c.cantidad,
+      precio_neto: Math.round(c.precio_neto ?? 0),
+      orden: (i + 1) * 10,
+    }))
+  if (lineas.length === 0) return 0
+
+  await db().from('orden_lineas').insert(lineas)
+  return lineas.length
+}
+
+/**
+ * Recibir la orden deja en «lo tenemos» todo lo que traía.
+ *
+ * Sin esto habría que ir ítem por ítem al inventario después de cada compra, y
+ * es exactamente el paso que nadie hace.
+ */
+export async function recibirOrden(ordenId: string) {
+  const { data } = await consultarLineasOrden(ordenId)
+  for (const l of ((data ?? []) as LineaOrden[]).filter(x => x.insumo_id)) {
+    await fijarExistencia(l.insumo_id as string, null, {
+      estado: 'tiene',
+      cantidad: l.cantidad,
+      valor: l.precio_neto,
+    })
+  }
+  return guardarOrden(ordenId, { estado: 'recibida' })
 }

@@ -37,6 +37,7 @@ const GRUPOS: { titulo: string; items: { a: string; titulo: string; detalle: str
     titulo: 'Operación',
     items: [
       { a: '/inventario', titulo: 'Inventario', detalle: 'Qué hay, qué falta y qué se acabó' },
+      { a: '/compras', titulo: 'Compras', detalle: 'Órdenes de compra y proveedores' },
       { a: '/equipo', titulo: 'Equipo', detalle: 'Las personas y su dotación' },
     ],
   },

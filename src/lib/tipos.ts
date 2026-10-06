@@ -381,7 +381,9 @@ export interface CotizacionInsumo {
   precio_neto: number | null
   cantidad: number
   fecha: string
+  vence_el: string | null
   estado: EstadoCotizacion
+  proveedor_id: string | null
   nota: string | null
   creado_en: string
 }
@@ -423,4 +425,56 @@ export const ESTADOS_COTIZACION: Record<EstadoCotizacion, string> = {
   recibida: 'Recibida',
   comprada: 'Comprada',
   descartada: 'Descartada',
+}
+
+/* ── Compras ────────────────────────────────────────────────────────────── */
+
+export type EstadoOrden = 'borrador' | 'enviada' | 'recibida' | 'anulada'
+
+export interface Proveedor {
+  id: string
+  nombre: string
+  razon_social: string | null
+  rut: string | null
+  rubro: string | null
+  contacto: string | null
+  telefono: string | null
+  email: string | null
+  direccion: string | null
+  comuna: string | null
+  web: string | null
+  condiciones: string | null
+  /** Cuánto dura una cotización suya. un distribuidor: tres días corridos. */
+  validez_dias: number | null
+  nota: string | null
+  activo: boolean
+  creado_en: string
+}
+
+export interface OrdenCompra {
+  id: string
+  numero: string | null
+  proveedor_id: string | null
+  fecha: string
+  entrega_esperada: string | null
+  estado: EstadoOrden
+  nota: string | null
+  creado_en: string
+}
+
+export interface LineaOrden {
+  id: string
+  orden_id: string
+  insumo_id: string | null
+  descripcion: string
+  cantidad: number
+  precio_neto: number
+  orden: number
+}
+
+export const ESTADOS_ORDEN: Record<EstadoOrden, string> = {
+  borrador: 'Borrador',
+  enviada: 'Enviada',
+  recibida: 'Recibida',
+  anulada: 'Anulada',
 }

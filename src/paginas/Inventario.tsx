@@ -4,13 +4,14 @@ import {
 } from '../componentes/ui'
 import {
   borrarCotizacionInsumo, consultarCatalogo, consultarCotizacionesInsumo, consultarExistencias,
-  consultarTecnicos, crearCotizacionInsumo, crearInsumo, fijarExistencia, marcarComprada,
-  useConsulta,
+  consultarProveedores, consultarTecnicos, crearCotizacionInsumo, crearInsumo, fijarExistencia,
+  marcarComprada, useConsulta,
 } from '../lib/datos'
-import { clp, conIva, fechaCorta } from '../lib/formato'
+import { clp, conIva, fechaCorta, hoyIso } from '../lib/formato'
 import {
   AMBITOS, ESTADOS_COTIZACION, ESTADOS_EXISTENCIA, ORDEN_EXISTENCIA,
-  type CotizacionInsumo, type Existencia, type Insumo, type EstadoExistencia, type Tecnico,
+  type CotizacionInsumo, type Existencia, type Insumo, type EstadoExistencia, type Proveedor,
+  type Tecnico,
 } from '../lib/tipos'
 
 /*
@@ -375,6 +376,12 @@ function HojaInsumo({
                       {clp(c.precio_neto)} neto · {clp(conIva(c.precio_neto ?? 0))} con IVA ·{' '}
                       {fechaCorta(c.fecha)}
                     </p>
+                    {/* Un precio vencido que parece vigente cuesta plata al cotizarle al cliente. */}
+                    {c.vence_el && c.vence_el < hoyIso() && (
+                      <p className="font-mono text-xs text-naranja">
+                        venció el {fechaCorta(c.vence_el)}
+                      </p>
+                    )}
                   </div>
                   <span className="shrink-0 font-mono text-[0.7rem] text-faint">
                     {ESTADOS_COTIZACION[c.estado]}
@@ -425,18 +432,34 @@ function FormularioCotizacion({
   cantidad: number
   alGuardar: () => void
 }) {
-  const [proveedor, setProveedor] = useState('')
+  const [proveedorId, setProveedorId] = useState('')
+  const [suelto, setSuelto] = useState('')
   const [precio, setPrecio] = useState('')
-  const [telefono, setTelefono] = useState('')
+
+  const proveedores = useConsulta<Proveedor[]>(() => consultarProveedores(true), [])
 
   async function guardar() {
-    if (!proveedor.trim()) return
+    const elegido = (proveedores.datos ?? []).find(p => p.id === proveedorId)
+    const nombre = elegido?.nombre ?? suelto.trim()
+    if (!nombre) return
+
+    // Si el proveedor declara cuántos días dura su precio, el vencimiento se
+    // calcula solo: es el dato que después evita cotizarle al cliente con un
+    // precio muerto.
+    let vence: string | null = null
+    if (elegido?.validez_dias) {
+      const f = new Date()
+      f.setDate(f.getDate() + elegido.validez_dias)
+      vence = new Date(f.getTime() - f.getTimezoneOffset() * 60000).toISOString().slice(0, 10)
+    }
+
     await crearCotizacionInsumo({
       insumo_id: insumoId,
-      proveedor: proveedor.trim(),
-      telefono: telefono.trim() || null,
+      proveedor_id: elegido?.id ?? null,
+      proveedor: nombre,
       precio_neto: Number(precio) || null,
       cantidad,
+      vence_el: vence,
       estado: 'recibida',
     })
     alGuardar()
@@ -444,28 +467,30 @@ function FormularioCotizacion({
 
   return (
     <div className="space-y-2 rounded-lg border border-linea bg-tinte/50 p-3">
-      <Campo
+      <Selector
         etiqueta="Proveedor"
-        autoFocus
-        value={proveedor}
-        onChange={e => setProveedor(e.target.value)}
-        placeholder="Refrimarket, Vulco, Sodimac"
+        opciones={[
+          ['', 'Otro, escribirlo abajo'],
+          ...(proveedores.datos ?? []).map(p => [p.id, p.nombre] as [string, string]),
+        ]}
+        value={proveedorId}
+        onChange={e => setProveedorId(e.target.value)}
       />
-      <div className="grid grid-cols-2 gap-2">
+      {!proveedorId && (
         <Campo
-          etiqueta="Precio neto"
-          type="number"
-          inputMode="numeric"
-          value={precio}
-          onChange={e => setPrecio(e.target.value)}
+          etiqueta="Nombre del proveedor"
+          value={suelto}
+          onChange={e => setSuelto(e.target.value)}
+          placeholder="Para lo que se anota rápido en la calle"
         />
-        <Campo
-          etiqueta="Teléfono"
-          type="tel"
-          value={telefono}
-          onChange={e => setTelefono(e.target.value)}
-        />
-      </div>
+      )}
+      <Campo
+        etiqueta="Precio neto"
+        type="number"
+        inputMode="numeric"
+        value={precio}
+        onChange={e => setPrecio(e.target.value)}
+      />
       <Boton className="w-full" onClick={() => void guardar()}>
         Guardar cotización
       </Boton>

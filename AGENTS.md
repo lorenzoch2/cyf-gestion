@@ -147,3 +147,19 @@ sitio ya tiene configuradas para compilar: el prefijo `VITE_` sólo le importa a
 puede viajar al navegador— y para una función de Netlify son variables de entorno como cualquier
 otra. Lo único que hay que agregar en Netlify es `SUPABASE_SECRET_KEY` (Project Settings → API Keys
 → Secret keys; en proyectos antiguos es la `service_role`).
+
+## Compras
+
+- **Las órdenes de compra son las que la empresa emite a un proveedor.** No confundir con las que
+  un cliente le emite a la empresa —como la de un cliente de mayo de 2026, que está en
+  `04 Comercial/Órdenes de Compra` de la carpeta—: esas son venta.
+- **Un proveedor declara cuántos días dura su cotización** (`validez_dias`). un distribuidor cotiza a tres
+  días corridos y su lista de precios dura una semana. Al guardar una cotización la app calcula el
+  vencimiento sola y después marca en naranja el precio muerto. Cotizarle al cliente con 30 días de
+  validez apoyado en un precio de tres es una pérdida esperando ocurrir, y era un problema real.
+- **«Traer lo que falta» es donde el inventario y las compras se tocan.** Toma los ítems en «falta»
+  o «se acabó» que ese proveedor ya cotizó, se queda con el precio más barato de cada uno y arma
+  las líneas. Reescribirlos a mano era la parte que nadie iba a hacer.
+- **Recibir una orden deja todo lo que traía en «lo tenemos».** El paso contrario —comprar y
+  después ir ítem por ítem al inventario— es exactamente el que se olvida.
+- Los precios se guardan **netos**, como los entrega el proveedor; el IVA lo pone la pantalla.
