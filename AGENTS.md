@@ -213,3 +213,15 @@ error sobrevive incluso a recargar la página. `rm -rf node_modules/.vite` y vol
 - **Los hallazgos son la razón comercial del informe.** De ahí sale el próximo presupuesto: una
   mantención de $38.000 se convierte en un trabajo de $300.000 porque alguien anotó que el
   condensador estaba tapado.
+
+## Documentos con vencimiento
+
+- **La app no guarda los archivos.** Viven en la carpeta de la empresa, en OneDrive, que es donde el
+  contador y el banco los van a buscar. Acá va la fecha y dónde está, que es lo único que se olvida.
+- **`aviso_dias` es por documento, no un número fijo.** Una patente municipal se renueva con mes y
+  medio de holgura; un certificado de vigencia se pide y llega el mismo día. Un aviso único para
+  todo, o grita demasiado pronto o avisa tarde.
+- **Los documentos sugeridos no traen fecha.** Inventarle un vencimiento a un documento es peor que
+  no tenerlo anotado: la lista sólo rellena nombre, ámbito, aviso y dónde vive.
+- **La portada carga tres cuentas**: lo que falta reponer, las mantenciones atrasadas y los
+  documentos por renovar. Un módulo que hay que acordarse de abrir no avisa de nada.

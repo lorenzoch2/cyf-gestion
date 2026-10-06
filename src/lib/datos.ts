@@ -5,7 +5,7 @@ import type {
   Prospecto, Ruta, Servicio, Tarea, Tarifario, Visita,
   CotizacionInsumo, Existencia, Insumo, Tecnico,
   LineaOrden, Mantencion, OrdenCompra, Proveedor,
-  FotoInforme, Hallazgo, Informe, InformeEquipo, MaterialInforme,
+  Documento, FotoInforme, Hallazgo, Informe, InformeEquipo, MaterialInforme,
 } from './tipos'
 
 /*
@@ -322,7 +322,7 @@ export type {
   Prospecto, Ruta, Servicio, Tarea, Tarifario, Visita,
   CotizacionInsumo, Existencia, Insumo, Tecnico,
   LineaOrden, Mantencion, OrdenCompra, Proveedor,
-  FotoInforme, Hallazgo, Informe, InformeEquipo, MaterialInforme,
+  Documento, FotoInforme, Hallazgo, Informe, InformeEquipo, MaterialInforme,
 }
 
 /* ── Equipo ─────────────────────────────────────────────────────────────── */
@@ -741,3 +741,21 @@ export async function emitirInforme(
   }
   return null
 }
+
+/* ── Documentos con vencimiento ─────────────────────────────────────────── */
+
+export const consultarDocumentos = (incluirArchivados = false) => {
+  const q = db().from('documentos').select('*').order('vence_el', { nullsFirst: false })
+  return incluirArchivados ? q : q.eq('archivado', false)
+}
+
+export const crearDocumento = (documento: Partial<Documento>) =>
+  db().from('documentos').insert(documento).select().single()
+
+export const guardarDocumento = (id: string, cambios: Partial<Documento>) =>
+  db()
+    .from('documentos')
+    .update({ ...cambios, actualizado_en: new Date().toISOString() })
+    .eq('id', id)
+
+export const borrarDocumento = (id: string) => db().from('documentos').delete().eq('id', id)

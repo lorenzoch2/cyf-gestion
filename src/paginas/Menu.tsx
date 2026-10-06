@@ -2,8 +2,11 @@ import { Link } from 'react-router-dom'
 import { Boton, Pantalla, Tarjeta } from '../componentes/ui'
 import { IconoFlecha } from '../componentes/iconos'
 import { useSesion } from '../lib/sesion'
-import { consultarExistencias, useConsulta } from '../lib/datos'
-import type { Existencia } from '../lib/tipos'
+import {
+  consultarDocumentos, consultarExistencias, consultarMantenciones, useConsulta,
+} from '../lib/datos'
+import { diasHasta } from '../lib/formato'
+import type { Documento, Existencia, Mantencion } from '../lib/tipos'
 
 /*
   La portada.
@@ -41,16 +44,43 @@ const GRUPOS: { titulo: string; items: { a: string; titulo: string; detalle: str
       { a: '/inventario', titulo: 'Inventario', detalle: 'Qué hay, qué falta y qué se acabó' },
       { a: '/compras', titulo: 'Compras', detalle: 'Órdenes de compra y proveedores' },
       { a: '/equipo', titulo: 'Equipo', detalle: 'Las personas y su dotación' },
+      { a: '/documentos', titulo: 'Documentos', detalle: 'Lo que caduca: patente, seguros, certificaciones' },
     ],
   },
 ]
 
 export function Menu() {
   const { sesion, salir } = useSesion()
-  const { datos } = useConsulta<Existencia[]>(() => consultarExistencias(), [])
 
-  // Un número en la portada vale por una visita a la pantalla.
-  const faltan = (datos ?? []).filter(e => e.estado === 'falta' || e.estado === 'agotado').length
+  /*
+    Los tres números que tienen que venir a buscarte.
+
+    Un módulo que hay que acordarse de abrir no avisa de nada: lo que vence se
+    vence igual. Por eso la portada carga estas tres cuentas y las muestra al
+    lado del nombre.
+  */
+  const existencias = useConsulta<Existencia[]>(() => consultarExistencias(), [])
+  const mantenciones = useConsulta<Mantencion[]>(() => consultarMantenciones(true), [])
+  const documentos = useConsulta<Documento[]>(() => consultarDocumentos(), [])
+
+  const avisos: Record<string, string> = {}
+
+  const faltan = (existencias.datos ?? []).filter(
+    e => e.estado === 'falta' || e.estado === 'agotado',
+  ).length
+  if (faltan > 0) avisos['/inventario'] = `${faltan} por reponer`
+
+  const atrasadas = (mantenciones.datos ?? []).filter(
+    m => (diasHasta(m.programada_el) ?? 0) < 0,
+  ).length
+  if (atrasadas > 0) avisos['/mantenciones'] = `${atrasadas} atrasadas`
+
+  const porVencer = (documentos.datos ?? []).filter(d => {
+    if (!d.vence_el) return false
+    const dias = diasHasta(d.vence_el) ?? 0
+    return dias <= d.aviso_dias
+  }).length
+  if (porVencer > 0) avisos['/documentos'] = `${porVencer} por renovar`
 
   return (
     <Pantalla titulo="Gestión" bajada="Calor y Frío Industrial">
@@ -68,9 +98,9 @@ export function Menu() {
                       <div className="min-w-0">
                         <p className="font-medium">
                           {item.titulo}
-                          {item.a === '/inventario' && faltan > 0 && (
+                          {avisos[item.a] && (
                             <span className="ml-2 rounded bg-naranja/12 px-1.5 py-0.5 font-mono text-[0.7rem] font-medium text-naranja">
-                              {faltan} por reponer
+                              {avisos[item.a]}
                             </span>
                           )}
                         </p>

@@ -705,3 +705,66 @@ export const MEDICIONES_CIRCUITO = [
   { clave: 'vacio_micrones', etiqueta: 'Vacío alcanzado', unidad: 'micrones' },
   { clave: 'vacio_min', etiqueta: 'Vacío, tiempo', unidad: 'min' },
 ]
+
+/* ── Documentos con vencimiento ─────────────────────────────────────────── */
+
+export type AmbitoDocumento = 'empresa' | 'persona' | 'vehiculo'
+
+export interface Documento {
+  id: string
+  nombre: string
+  ambito: AmbitoDocumento
+  tecnico_id: string | null
+  emitido_el: string | null
+  vence_el: string | null
+  aviso_dias: number
+  ubicacion: string | null
+  nota: string | null
+  archivado: boolean
+  creado_en: string
+}
+
+export const AMBITOS_DOCUMENTO: Record<AmbitoDocumento, string> = {
+  empresa: 'De la empresa',
+  persona: 'De una persona',
+  vehiculo: 'De la camioneta',
+}
+
+/**
+ * Lo que una empresa como esta tiene que mantener al día.
+ *
+ * No vienen cargados con fecha: inventarle un vencimiento a un documento es
+ * peor que no tenerlo anotado. Son sugerencias al agregar, para no quedarse
+ * mirando un campo vacío sin saber qué poner.
+ *
+ * `aviso` es cuánto antes conviene empezar el trámite, y cambia mucho: la
+ * patente municipal se renueva con holgura, un certificado de vigencia se pide
+ * y llega el mismo día.
+ */
+export const DOCUMENTOS_SUGERIDOS: {
+  nombre: string
+  ambito: AmbitoDocumento
+  aviso: number
+  donde?: string
+}[] = [
+  { nombre: 'Patente comercial', ambito: 'empresa', aviso: 45, donde: '03 Municipal' },
+  {
+    nombre: 'Certificado de vigencia de la sociedad', ambito: 'empresa', aviso: 15,
+    donde: '01 Legal y Societario/Certificados de Vigencia',
+  },
+  {
+    nombre: 'Certificado digital para facturación', ambito: 'empresa', aviso: 60,
+    donde: '02 Tributario y Contabilidad/Certificado Digital',
+  },
+  { nombre: 'Seguro de responsabilidad civil', ambito: 'empresa', aviso: 45 },
+  { nombre: 'Registro de marca INAPI', ambito: 'empresa', aviso: 180 },
+  { nombre: 'Permiso de circulación', ambito: 'vehiculo', aviso: 30 },
+  { nombre: 'Revisión técnica y de gases', ambito: 'vehiculo', aviso: 30 },
+  { nombre: 'Seguro obligatorio (SOAP)', ambito: 'vehiculo', aviso: 30 },
+  { nombre: 'Seguro del vehículo', ambito: 'vehiculo', aviso: 30 },
+  { nombre: 'Extintor con carga vigente', ambito: 'vehiculo', aviso: 30 },
+  { nombre: 'Licencia de conducir', ambito: 'persona', aviso: 60 },
+  { nombre: 'Certificación en refrigeración', ambito: 'persona', aviso: 90 },
+  { nombre: 'Curso de trabajo en altura', ambito: 'persona', aviso: 60 },
+  { nombre: 'Examen de altura física', ambito: 'persona', aviso: 60 },
+]
