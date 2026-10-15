@@ -217,7 +217,7 @@ export function Caja() {
           </div>
 
           {visibles.length === 0 ? (
-            <Vacio texto="Sin movimientos este mes." />
+            <Vacio texto="Sin movimientos este mes. Se anota cada factura y boleta, emitida o recibida, el mismo día." />
           ) : (
             <ul className="space-y-2">
               {visibles.map(m => (

@@ -44,7 +44,7 @@ export function Presupuestos() {
       {cargando ? (
         <Cargando />
       ) : lista.length === 0 ? (
-        <Vacio texto="Sin presupuestos todavía." />
+        <Vacio texto="Sin presupuestos todavía. El que se manda el mismo día de la visita vale el doble." />
       ) : (
         <ul className="space-y-2">
           {lista.map(p => (

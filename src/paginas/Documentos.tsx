@@ -91,7 +91,7 @@ export function Documentos() {
       {documentos.cargando ? (
         <Cargando />
       ) : (documentos.datos ?? []).length === 0 ? (
-        <Vacio texto="Todavía no hay documentos anotados." />
+        <Vacio texto="Todavía no hay documentos anotados. Van la patente, los seguros, el permiso de circulación y las certificaciones, con su fecha de vencimiento." />
       ) : (
         <div className="space-y-5">
           {porTramo.map(([tramo, lista]) => (

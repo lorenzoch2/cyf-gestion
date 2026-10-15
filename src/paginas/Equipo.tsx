@@ -80,8 +80,10 @@ export function Equipo() {
                     <span className="font-mono text-xs text-faint">
                       dotación: {tiene} de {personales.length}
                     </span>
+                    {/* Con el técnico en la dirección, el inventario abre
+                        directo en su caja y no en la del taller. */}
                     <Link
-                      to="/inventario"
+                      to={`/inventario?tecnico=${t.id}`}
                       className="text-xs font-medium text-acero-dk"
                     >
                       Ver su caja

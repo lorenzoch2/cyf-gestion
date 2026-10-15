@@ -87,7 +87,7 @@ export function Mantenciones() {
       {mantenciones.cargando ? (
         <Cargando />
       ) : (mantenciones.datos ?? []).length === 0 ? (
-        <Vacio texto="No hay mantenciones programadas." />
+        <Vacio texto="No hay mantenciones programadas. Se programan desde acá, o se crean solas al cerrar la anterior." />
       ) : (
         <div className="space-y-5">
           {porTramo.map(([tramo, lista]) => (

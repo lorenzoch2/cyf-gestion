@@ -296,3 +296,26 @@ ahí el ancho completo sirve.
 El alta manual toma **quién atendió**, una **nota** y la **ubicación del teléfono**. Lo último no es
 un lujo: un local agregado sin coordenadas no aparece nunca en el mapa, y el mapa es la pantalla con
 que se sale a la calle — quedaría guardado y a la vez invisible justo donde hace falta verlo.
+
+## Cuando la red falla
+
+- **Una consulta que falla no puede verse igual que una lista vacía.** Las pantallas pintan
+  `datos ?? []`, así que sin aviso la ficha de un cliente diría «sin equipos cargados» cuando lo que
+  pasó es que no cargó nada — y uno sale a trabajar creyendo algo falso. En vez de repetir el manejo
+  de error en veinticuatro pantallas, cada consulta reporta cómo le fue y `AvisoConexion` muestra
+  una franja arriba cuando dejan de llegar. Un éxito borra la racha.
+- **`useConsulta` atrapa el rechazo, no sólo el error devuelto.** Si el `fetch` se cae, la promesa
+  se rechaza, el `await` lanza y sin `try` el `setCargando(false)` nunca corre: la pantalla queda en
+  «Cargando…» para siempre y sin decir nada.
+- **Supabase reintenta antes de rendirse: con la red cortada tarda unos siete segundos** en
+  devolver el error. Al probar esto hay que esperar más de eso, o parece que quedó colgado.
+
+## Detalles de terreno
+
+- **Sin teléfono, «Llamar» y «WhatsApp» se reemplazan por «Anotar teléfono».** 309 de los 333
+  locales no traen teléfono: eran dos botones apagados ocupando dos tercios de la pantalla más usada
+  en la calle. Ahora ese espacio es la acción que corresponde justo ahí.
+- **«Ver su caja» lleva el técnico en la dirección** (`/inventario?tecnico=…`) y el inventario abre
+  en su caja, no en la del taller.
+- **Los estados vacíos enseñan qué hacer y por qué.** «Sin equipos cargados» no dice nada; «de ahí
+  sale qué se mide en cada visita» sí.

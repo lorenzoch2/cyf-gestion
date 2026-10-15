@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   Area, Boton, Buscador, Campo, Cargando, Hoja, Pantalla, Selector, Tarjeta, Vacio,
 } from '../componentes/ui'
@@ -32,7 +33,8 @@ function llave(insumoId: string, tecnicoId: string | null) {
 }
 
 export function Inventario() {
-  const [dueno, setDueno] = useState('taller')
+  const [parametros] = useSearchParams()
+  const [dueno, setDueno] = useState(parametros.get('tecnico') ?? 'taller')
   const [estados, setEstados] = useState<EstadoExistencia[]>([])
   const [soloCriticos, setSoloCriticos] = useState(false)
   const [busqueda, setBusqueda] = useState('')

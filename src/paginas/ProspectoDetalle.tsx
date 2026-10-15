@@ -196,17 +196,35 @@ export function ProspectoDetalle() {
         </div>
       </section>
 
+      {/*
+        Sin teléfono, «Llamar» y «WhatsApp» eran dos botones apagados ocupando
+        dos tercios de la pantalla más usada en la calle, y 309 de los 333
+        locales no traen teléfono. Ese espacio pasa a ser la acción que sí
+        corresponde: anotarlo, que es justo lo que uno acaba de conseguir
+        cuando está parado ahí.
+      */}
       <div className="mt-4 grid grid-cols-3 gap-2">
-        <a href={tel ?? undefined} className={!tel ? 'pointer-events-none opacity-40' : ''}>
-          <Tarjeta className="flex flex-col items-center gap-1 p-3 text-xs text-mut">
-            <span className="text-acero"><IconoTelefono /></span>Llamar
-          </Tarjeta>
-        </a>
-        <a href={wsp ?? undefined} target="_blank" rel="noreferrer" className={!wsp ? 'pointer-events-none opacity-40' : ''}>
-          <Tarjeta className="flex flex-col items-center gap-1 p-3 text-xs text-mut">
-            <span className="text-acero"><IconoWhatsapp /></span>WhatsApp
-          </Tarjeta>
-        </a>
+        {tel ? (
+          <>
+            <a href={tel}>
+              <Tarjeta className="flex flex-col items-center gap-1 p-3 text-xs text-mut">
+                <span className="text-acero"><IconoTelefono /></span>Llamar
+              </Tarjeta>
+            </a>
+            <a href={wsp ?? undefined} target="_blank" rel="noreferrer" className={!wsp ? 'pointer-events-none opacity-40' : ''}>
+              <Tarjeta className="flex flex-col items-center gap-1 p-3 text-xs text-mut">
+                <span className="text-acero"><IconoWhatsapp /></span>WhatsApp
+              </Tarjeta>
+            </a>
+          </>
+        ) : (
+          <button onClick={abrirEdicion} className="col-span-2 text-left">
+            <Tarjeta className="flex h-full flex-col items-center justify-center gap-1 p-3 text-xs text-mut">
+              <span className="text-acero"><IconoTelefono /></span>
+              Anotar teléfono
+            </Tarjeta>
+          </button>
+        )}
         <a href={mapa ?? undefined} target="_blank" rel="noreferrer" className={!mapa ? 'pointer-events-none opacity-40' : ''}>
           <Tarjeta className="flex flex-col items-center gap-1 p-3 text-xs text-mut">
             <span className="text-acero"><IconoPin /></span>Mapa

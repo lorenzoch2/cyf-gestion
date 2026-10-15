@@ -43,7 +43,7 @@ export function Proveedores() {
       {cargando ? (
         <Cargando />
       ) : visibles.length === 0 ? (
-        <Vacio texto="Todavía no hay proveedores." />
+        <Vacio texto="Todavía no hay proveedores. Cárgalos una vez y después las cotizaciones del inventario se les asignan solas." />
       ) : (
         <ul className="mt-4 space-y-2">
           {visibles.map(p => (

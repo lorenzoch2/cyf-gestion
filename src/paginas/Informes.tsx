@@ -46,7 +46,7 @@ export function Informes() {
       {informes.cargando ? (
         <Cargando />
       ) : (informes.datos ?? []).length === 0 ? (
-        <Vacio texto="Todavía no hay informes." />
+        <Vacio texto="Todavía no hay informes. Uno por visita: deja por escrito lo que se hizo y se entrega firmado antes de salir del local." />
       ) : (
         <ul className="space-y-2">
           {(informes.datos ?? []).map(i => (

@@ -1,6 +1,7 @@
 import { Suspense, lazy } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { Navegacion } from './componentes/Navegacion'
+import { AvisoConexion } from './lib/conexion'
 import { Cargando } from './componentes/ui'
 import { useSesion } from './lib/sesion'
 import { hayConfiguracion } from './lib/supabase'
@@ -53,6 +54,7 @@ export function App() {
 
   return (
     <>
+      <AvisoConexion />
       <Routes>
         <Route path="/" element={<Menu />} />
         <Route path="/hoy" element={<Hoy />} />

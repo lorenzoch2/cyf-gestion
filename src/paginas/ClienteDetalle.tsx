@@ -109,7 +109,7 @@ export function ClienteDetalle() {
           <Boton onClick={() => setHoja('equipo')} className="min-h-9 px-3 text-sm">agregar</Boton>
         </h2>
         {(equipos.datos ?? []).length === 0 ? (
-          <Vacio texto="Sin equipos cargados." />
+          <Vacio texto="Sin equipos cargados. Cárgalos con «agregar»: de ahí sale qué se mide en cada visita y la historia de cada máquina." />
         ) : (
           <ul className="space-y-2">
             {(equipos.datos ?? []).map(e => (
@@ -138,7 +138,7 @@ export function ClienteDetalle() {
           <Boton onClick={() => setHoja('contrato')} className="min-h-9 px-3 text-sm">agregar</Boton>
         </h2>
         {(contratos.datos ?? []).length === 0 ? (
-          <Vacio texto="Sin contrato de mantención." />
+          <Vacio texto="Sin contrato de mantención. Es lo que hace predecible el mes: se acuerda una frecuencia y las visitas se agendan solas." />
         ) : (
           <ul className="space-y-2">
             {(contratos.datos ?? []).map(k => (

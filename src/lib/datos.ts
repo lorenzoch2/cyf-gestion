@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { db } from './supabase'
+import { reportarConsulta } from './conexion'
 import type {
   Cliente, Contrato, Equipo, LineaPresupuesto, Oportunidad, PrecioTarifario, Presupuesto,
   Prospecto, Ruta, Servicio, Tarea, Tarifario, Visita,
@@ -21,13 +22,33 @@ export function useConsulta<T>(consulta: () => PromiseLike<{ data: T | null; err
   const [error, setError] = useState<string | null>(null)
   const [cargando, setCargando] = useState(true)
 
+  /*
+    El `try` no es decorativo.
+
+    Supabase normalmente devuelve el error dentro del resultado, pero si el
+    `fetch` se cae —señal que se corta a mitad de la calle— la promesa se
+    rechaza y el `await` lanza. Sin atrapar eso, `setCargando(false)` nunca
+    corre y la pantalla se queda en «Cargando…» para siempre, sin decir nada.
+    Pasó de verdad al probarlo con la red cortada.
+
+    La franja de arriba dice la verdad cuando las consultas dejan de llegar:
+    sin ella un error de red se ve igual que una lista vacía.
+  */
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const ejecutar = useCallback(async () => {
     setCargando(true)
-    const { data, error } = await consulta()
-    setDatos(data)
-    setError(error ? error.message : null)
-    setCargando(false)
+    try {
+      const { data, error } = await consulta()
+      setDatos(data)
+      setError(error ? error.message : null)
+      reportarConsulta(Boolean(error))
+    } catch (falla) {
+      setDatos(null)
+      setError((falla as Error).message)
+      reportarConsulta(true)
+    } finally {
+      setCargando(false)
+    }
   }, deps)
 
   useEffect(() => {
