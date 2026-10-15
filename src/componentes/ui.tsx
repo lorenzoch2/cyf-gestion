@@ -25,8 +25,13 @@ export function Pantalla({
   const navegar = useNavigate()
   return (
     <div className="min-h-full">
+      {/*
+        La app es una columna del ancho de un teléfono, centrada, en cualquier
+        pantalla. Sin esto, en un notebook las tarjetas se estiran a 1.200 px
+        mientras la barra de abajo mide 512 y la app se ve rota.
+      */}
       <header className="sobre-seguro sticky top-0 z-20 border-b border-linea bg-papel/95 backdrop-blur">
-        <div className="flex items-start gap-3 px-4 py-3">
+        <div className="mx-auto flex max-w-lg items-start gap-3 px-4 py-3">
           {volver && (
             <button
               onClick={() => navegar(-1)}
@@ -43,7 +48,7 @@ export function Pantalla({
           {accion && <div className="shrink-0">{accion}</div>}
         </div>
       </header>
-      <main className="px-4 pb-28 pt-3">{children}</main>
+      <main className="mx-auto max-w-lg px-4 pb-28 pt-3">{children}</main>
     </div>
   )
 }

@@ -271,3 +271,28 @@ aviso de «132 por reponer» se vuelve ruido y se deja de mirar a la semana.
 - **El IVA del mes se calcula sobre lo emitido y recibido, no sobre lo cobrado**, que es como se
   declara. El remanente arrastrado de meses anteriores no se intenta encadenar acá: esa cadena está
   en el libro, y el F29 se declara con la propuesta del SII.
+
+## La guía
+
+- **El contenido vive en `src/lib/guia.ts`, no en la pantalla.** Es contenido, no interfaz, y de ahí
+  sale también la copia imprimible que está en `04 Comercial/Prospección` de la carpeta de la
+  empresa. Si las dos dicen cosas distintas, manda la de la app.
+- **Va plegada, una sección abierta a la vez.** Se lee de pie en la vereda antes de entrar a un
+  local, con una mano. Una guía que hay que scrollear entera no se lee nunca.
+- **Lo que se dice en voz alta va marcado distinto** —fondo latón, borde a la izquierda— para
+  reconocerlo de un vistazo sin leerlo.
+- El libreto son **preguntas, no discurso**: nadie compra «mantención preventiva», compra dejar de
+  perder plata por algo concreto. Si alguna vez se reescribe, mantener esa forma.
+
+## La columna
+
+**La app es una columna de 512 px centrada, en cualquier pantalla** (`max-w-lg`, el mismo ancho que
+la barra de navegación y que las hojas). Sin eso, en un notebook las tarjetas se estiran a 1.200 px
+mientras la barra de abajo mide 512 y la app se ve rota. El lienzo del mapa es la única excepción:
+ahí el ancho completo sirve.
+
+## Agregar un local en la calle
+
+El alta manual toma **quién atendió**, una **nota** y la **ubicación del teléfono**. Lo último no es
+un lujo: un local agregado sin coordenadas no aparece nunca en el mapa, y el mapa es la pantalla con
+que se sale a la calle — quedaría guardado y a la vez invisible justo donde hace falta verlo.

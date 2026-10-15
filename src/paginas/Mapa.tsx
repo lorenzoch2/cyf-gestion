@@ -364,7 +364,7 @@ export function Mapa() {
   return (
     <div className="flex h-dvh flex-col">
       <header className="sobre-seguro z-20 border-b border-linea bg-papel/95">
-        <div className="flex items-center gap-3 px-4 py-3">
+        <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-3">
           <button onClick={() => navegar(-1)} aria-label="Volver" className="-ml-1 text-mut">
             <IconoVolver />
           </button>
@@ -380,7 +380,7 @@ export function Mapa() {
           </Link>
         </div>
 
-        <div className="flex gap-2 overflow-x-auto px-4 pb-2">
+        <div className="mx-auto flex max-w-lg gap-2 overflow-x-auto px-4 pb-2">
           {[['', 'Todas'], ...Object.entries(ZONAS)].map(([valor, texto]) => (
             <button
               key={valor}

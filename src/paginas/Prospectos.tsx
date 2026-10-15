@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import {
-  Aviso, Boton, Buscador, Campo, Cargando, Hoja, Pantalla, Selector, Tarjeta, Vacio,
+  Area, Aviso, Boton, Buscador, Campo, Cargando, Hoja, Pantalla, Selector, Tarjeta, Vacio,
 } from '../componentes/ui'
 import { RegistroRapido, type Deshacer } from '../componentes/RegistroRapido'
 import { IconoAgregar } from '../componentes/iconos'
@@ -45,6 +45,31 @@ export function Prospectos() {
   const [telefono, setTelefono] = useState('')
   const [zonaNueva, setZonaNueva] = useState('egana')
   const [prioridad, setPrioridad] = useState<Prioridad>('alta')
+  const [contacto, setContacto] = useState('')
+  const [nota, setNota] = useState('')
+
+  /*
+    La ubicación se toma del teléfono, estando parado en la puerta.
+
+    Un local agregado a mano sin coordenadas no aparece nunca en el mapa, y el
+    mapa es la pantalla con que se sale a la calle: el local quedaría guardado
+    y a la vez invisible justo donde hace falta verlo.
+  */
+  const [ubicacion, setUbicacion] = useState<[number, number] | null>(null)
+  const [tomando, setTomando] = useState(false)
+
+  function tomarUbicacion() {
+    if (!navigator.geolocation) return
+    setTomando(true)
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        setUbicacion([pos.coords.latitude, pos.coords.longitude])
+        setTomando(false)
+      },
+      () => setTomando(false),
+      { enableHighAccuracy: true, timeout: 10000 },
+    )
+  }
 
   async function agregar() {
     if (!nombre.trim()) return
@@ -54,12 +79,20 @@ export function Prospectos() {
       zona: zonaNueva,
       direccion: direccion || null,
       telefono: telefono || null,
+      contacto_nombre: contacto.trim() || null,
+      notas: nota.trim() || null,
+      lat: ubicacion?.[0] ?? null,
+      lng: ubicacion?.[1] ?? null,
       prioridad,
       estado: 'por_visitar',
+      origen: 'manual',
     })
     setNombre('')
     setDireccion('')
     setTelefono('')
+    setContacto('')
+    setNota('')
+    setUbicacion(null)
     setAbierta(false)
     void recargar()
   }
@@ -231,7 +264,37 @@ export function Prospectos() {
             onChange={e => setZonaNueva(e.target.value)}
           />
           <Campo etiqueta="Dirección" value={direccion} onChange={e => setDireccion(e.target.value)} />
-          <Campo etiqueta="Teléfono" inputMode="tel" value={telefono} onChange={e => setTelefono(e.target.value)} />
+          <div className="grid grid-cols-2 gap-2">
+            <Campo
+              etiqueta="Quién atendió"
+              value={contacto}
+              onChange={e => setContacto(e.target.value)}
+              placeholder="Sra. Marta, dueña"
+            />
+            <Campo etiqueta="Teléfono" inputMode="tel" value={telefono} onChange={e => setTelefono(e.target.value)} />
+          </div>
+          <Area
+            etiqueta="Nota"
+            rows={2}
+            value={nota}
+            onChange={e => setNota(e.target.value)}
+            placeholder="Tiene dos visicooler y un split. El de atrás escarcha."
+          />
+
+          <div>
+            <Boton className="w-full" disabled={tomando} onClick={tomarUbicacion}>
+              {tomando
+                ? 'Tomando ubicación…'
+                : ubicacion
+                  ? 'Ubicación tomada · volver a tomar'
+                  : 'Usar mi ubicación'}
+            </Boton>
+            <p className="mt-1 text-xs text-faint">
+              {ubicacion
+                ? 'Queda con pin en el mapa, donde estás parado.'
+                : 'Sin esto el local se guarda, pero no aparece en el mapa.'}
+            </p>
+          </div>
           <Selector
             etiqueta="Prioridad"
             opciones={[['alta', 'Alta'], ['media', 'Media'], ['baja', 'Baja']]}

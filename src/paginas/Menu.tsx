@@ -24,6 +24,7 @@ const GRUPOS: { titulo: string; items: { a: string; titulo: string; detalle: str
       { a: '/tareas', titulo: 'Pendientes', detalle: 'Lo que hay que hacer y cuándo vence' },
       { a: '/mapa', titulo: 'Mapa', detalle: 'Los locales por color de estado, y el recorrido' },
       { a: '/rutas', titulo: 'Rutas', detalle: 'Los locales que se caminan en una tarde' },
+      { a: '/guia', titulo: 'Guía', detalle: 'Qué decir en la puerta, y cómo se usa la app' },
     ],
   },
   {
