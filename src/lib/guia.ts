@@ -76,12 +76,26 @@ export const GUIA: SeccionGuia[] = [
       {
         tipo: 'lista',
         items: [
-          { titulo: 'Interesado', texto: 'Quiere que volvamos. Vuelve a la lista en tres días.' },
-          { titulo: 'Pidió cotización', texto: 'Hay que mandarle precio. En dos días.' },
+          {
+            titulo: 'Quedó interesado',
+            texto: 'Quiere que volvamos. Vuelve a la lista en tres días.',
+          },
+          { titulo: 'Pidió cotización', texto: 'Hay que mandarle precio. Vuelve en dos días.' },
           { titulo: 'No estaba quien decide', texto: 'Volver cuando esté. En dos días.' },
-          { titulo: 'Dejé tarjeta, sin interés hoy', texto: 'Queda visitado y vuelve en una semana.' },
-          { titulo: 'Cerrado', texto: 'No cuenta como visita. Queda por visitar.' },
-          { titulo: 'No corresponde', texto: 'No tiene equipos o no va a comprar nunca. Se descarta.' },
+          {
+            titulo: 'Dejé tarjeta, sin interés hoy',
+            texto:
+              'Queda visitado y vuelve en una semana. No se descarta: el no de octubre no es el no de diciembre.',
+          },
+          {
+            titulo: 'Local cerrado',
+            texto:
+              'Queda constancia de que se pasó, pero sigue por visitar. Vuelve en dos días, a otra hora.',
+          },
+          {
+            titulo: 'No corresponde',
+            texto: 'No tiene equipos de frío. Es el único que descarta el local.',
+          },
         ],
       },
     ],

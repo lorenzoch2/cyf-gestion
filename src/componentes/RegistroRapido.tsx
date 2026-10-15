@@ -17,17 +17,36 @@ import { ESTADOS_PROSPECTO, type EstadoProspecto, type Prospecto } from '../lib/
 
 interface ResultadoRapido {
   etiqueta: string
-  estado: EstadoProspecto
+  /** `null` deja el estado como estaba. */
+  estado: EstadoProspecto | null
   volverEnDias?: number
+  /** Haber caminado hasta la puerta no siempre es haber visitado. */
+  cuentaComoVisita?: boolean
 }
 
+/*
+  Estos seis son los mismos que explica la guía, con las mismas palabras. Si
+  alguna vez cambian, cambian en los dos lados: una guía que describe botones
+  que no existen es peor que no tener guía.
+
+  Dos cosas que estaban mal y se arreglaron acá:
+
+  — «Local cerrado» descartaba el local. Un minimarket cerrado a las cuatro de
+    la tarde no es un local descartado: es un local al que hay que volver a
+    otra hora. Descartarlo lo sacaba de «por visitar» para siempre.
+
+  — «No le interesa» también descartaba. Un no de octubre no es un no de
+    diciembre, cuando apriete el calor y el dueño se acuerde de la tarjeta. El
+    descarte queda sólo para lo que de verdad no corresponde: un local sin
+    equipos.
+*/
 const RESULTADOS: ResultadoRapido[] = [
   { etiqueta: 'Quedó interesado', estado: 'interesado', volverEnDias: 3 },
-  { etiqueta: 'Evaluación agendada', estado: 'evaluacion', volverEnDias: 2 },
-  { etiqueta: 'Pidió volver', estado: 'interesado', volverEnDias: 7 },
+  { etiqueta: 'Pidió cotización', estado: 'cotizado', volverEnDias: 2 },
   { etiqueta: 'No estaba quien decide', estado: 'visitado', volverEnDias: 2 },
-  { etiqueta: 'No le interesa', estado: 'descartado' },
-  { etiqueta: 'Local cerrado', estado: 'descartado' },
+  { etiqueta: 'Dejé tarjeta, sin interés hoy', estado: 'visitado', volverEnDias: 7 },
+  { etiqueta: 'Local cerrado', estado: null, volverEnDias: 2, cuentaComoVisita: false },
+  { etiqueta: 'No corresponde', estado: 'descartado' },
 ]
 
 /** Lo necesario para deshacer un registro hecho sin querer. */
@@ -69,8 +88,9 @@ export function RegistroRapido({
     })
 
     await guardarProspecto(prospecto.id, {
-      estado: r.estado,
-      visitado_en: hoyIso(),
+      // El local cerrado deja constancia de que se pasó, pero sigue pendiente.
+      estado: r.estado ?? prospecto.estado,
+      visitado_en: r.cuentaComoVisita === false ? prospecto.visitado_en : hoyIso(),
       resultado: r.etiqueta,
       proximo_paso: r.volverEnDias ? 'Volver a pasar' : prospecto.proximo_paso,
       proximo_paso_en: r.volverEnDias ? sumarDias(r.volverEnDias) : prospecto.proximo_paso_en,
@@ -94,7 +114,7 @@ export function RegistroRapido({
       </p>
       <div className="space-y-2">
         {RESULTADOS.map(r => {
-          const pinta = ESTADOS_PROSPECTO[r.estado]
+          const pinta = ESTADOS_PROSPECTO[r.estado ?? prospecto?.estado ?? 'por_visitar']
           return (
             <button
               key={r.etiqueta}
@@ -106,7 +126,9 @@ export function RegistroRapido({
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-medium">{r.etiqueta}</span>
                 <span className="block text-xs text-faint">
-                  Queda como «{pinta.corta.toLowerCase()}»
+                  {r.estado === null
+                    ? 'Sigue por visitar'
+                    : `Queda como «${pinta.corta.toLowerCase()}»`}
                   {r.volverEnDias ? ` · volver en ${r.volverEnDias} días` : ''}
                 </span>
               </span>
