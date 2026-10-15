@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Boton, Pantalla, Tarjeta } from '../componentes/ui'
-import { IconoFlecha } from '../componentes/iconos'
+import { IconoBuscar, IconoFlecha } from '../componentes/iconos'
 import { useSesion } from '../lib/sesion'
 import {
   consultarCatalogo, consultarDocumentos, consultarExistencias, consultarMantenciones, useConsulta,
@@ -112,6 +112,15 @@ export function Menu() {
 
   return (
     <Pantalla titulo="Gestión" bajada="Calor y Frío Industrial">
+      {/* Arriba de todo: en la calle uno se acuerda del nombre del local, no
+          de en qué pantalla quedó guardado. */}
+      <Link to="/buscar" className="mb-5 block">
+        <Tarjeta className="flex items-center gap-2.5 px-3 py-2.5 text-mut">
+          <IconoBuscar />
+          <span className="text-sm">Buscar en todo</span>
+        </Tarjeta>
+      </Link>
+
       <div className="space-y-6">
         {GRUPOS.map(grupo => (
           <section key={grupo.titulo}>

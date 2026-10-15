@@ -825,3 +825,83 @@ export const guardarMovimiento = (id: string, cambios: Partial<Movimiento>) =>
     .eq('id', id)
 
 export const borrarMovimiento = (id: string) => db().from('movimientos').delete().eq('id', id)
+
+/* ── Buscar en todo ─────────────────────────────────────────────────────── */
+
+export interface Hallado {
+  tipo: 'prospecto' | 'cliente' | 'negocio' | 'presupuesto' | 'informe' | 'proveedor' | 'insumo'
+  id: string
+  titulo: string
+  detalle: string | null
+  ruta: string
+}
+
+/**
+ * Un nombre, buscado en todas partes.
+ *
+ * Cada pantalla tiene su propio buscador, y eso sirve cuando uno ya sabe dónde
+ * está la cosa. En la calle pasa al revés: se acuerda del nombre del local y
+ * no de si quedó como prospecto, como cliente o como presupuesto.
+ *
+ * Las comas y los porcentajes se sacan del texto: son la sintaxis del filtro
+ * de PostgREST y colarlas rompe la consulta entera.
+ */
+export async function buscarEnTodo(texto: string): Promise<Hallado[]> {
+  const limpio = texto.trim().replace(/[,%]/g, ' ').trim()
+  if (limpio.length < 2) return []
+  const like = `%${limpio}%`
+
+  const [prospectos, clientes, negocios, presupuestos, informes, proveedores, insumos] =
+    await Promise.all([
+      db().from('prospectos').select('id, nombre, rubro, direccion')
+        .or(`nombre.ilike.${like},direccion.ilike.${like}`).limit(8),
+      db().from('clientes').select('id, nombre, direccion')
+        .or(`nombre.ilike.${like},direccion.ilike.${like}`).limit(8),
+      db().from('oportunidades').select('id, titulo, etapa').ilike('titulo', like).limit(5),
+      db().from('presupuestos').select('id, numero, titulo')
+        .or(`titulo.ilike.${like},numero.ilike.${like}`).limit(5),
+      db().from('informes').select('id, numero, tipo').ilike('numero', like).limit(5),
+      db().from('proveedores').select('id, nombre, rubro').ilike('nombre', like).limit(5),
+      db().from('catalogo_insumos').select('id, nombre, codigo, categoria')
+        .or(`nombre.ilike.${like},codigo.ilike.${like}`).limit(6),
+    ])
+
+  const hallados: Hallado[] = []
+  const agregar = (
+    filas: unknown[] | null,
+    tipo: Hallado['tipo'],
+    arma: (f: Record<string, string>) => Omit<Hallado, 'tipo'>,
+  ) => {
+    for (const f of (filas ?? []) as Record<string, string>[]) {
+      hallados.push({ tipo, ...arma(f) })
+    }
+  }
+
+  agregar(prospectos.data, 'prospecto', f => ({
+    id: f.id, titulo: f.nombre, detalle: [f.rubro, f.direccion].filter(Boolean).join(' · ') || null,
+    ruta: `/prospectos/${f.id}`,
+  }))
+  agregar(clientes.data, 'cliente', f => ({
+    id: f.id, titulo: f.nombre, detalle: f.direccion ?? null, ruta: `/clientes/${f.id}`,
+  }))
+  agregar(negocios.data, 'negocio', f => ({
+    id: f.id, titulo: f.titulo, detalle: f.etapa ?? null, ruta: '/negocios',
+  }))
+  agregar(presupuestos.data, 'presupuesto', f => ({
+    id: f.id, titulo: f.titulo ?? 'Presupuesto', detalle: f.numero ?? null,
+    ruta: `/presupuestos/${f.id}`,
+  }))
+  agregar(informes.data, 'informe', f => ({
+    id: f.id, titulo: `Informe ${f.numero ?? ''}`.trim(), detalle: f.tipo ?? null,
+    ruta: `/informes/${f.id}`,
+  }))
+  agregar(proveedores.data, 'proveedor', f => ({
+    id: f.id, titulo: f.nombre, detalle: f.rubro ?? null, ruta: '/proveedores',
+  }))
+  agregar(insumos.data, 'insumo', f => ({
+    id: f.id, titulo: f.nombre, detalle: [f.codigo, f.categoria].filter(Boolean).join(' · '),
+    ruta: '/inventario',
+  }))
+
+  return hallados
+}

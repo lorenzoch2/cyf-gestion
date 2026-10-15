@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useBorrador } from '../lib/borrador'
 import { Boton, Campo, Cargando, Etiqueta, Hoja, Pantalla, Selector, Tarjeta, Vacio } from '../componentes/ui'
 import { IconoAgregar } from '../componentes/iconos'
 import {
@@ -13,17 +14,24 @@ export function Presupuestos() {
   const { datos, cargando, recargar } = useConsulta<Presupuesto[]>(() => consultarPresupuestos(), [])
   const clientes = useConsulta<Cliente[]>(() => consultarClientes(), [])
   const [abierta, setAbierta] = useState(false)
-  const [titulo, setTitulo] = useState('')
-  const [clienteId, setClienteId] = useState('')
+
+  /*
+    Cada presupuesto se lleva un número correlativo, y los correlativos no se
+    reciclan: uno creado por equivocación deja un hueco en la numeración que el
+    cliente después ve. Por eso exige título —no se crea «Mantención» por
+    omisión— y lo escrito queda en borrador hasta que se confirma.
+  */
+  const nuevo = useBorrador('presupuesto-nuevo', { titulo: '', clienteId: '' })
 
   async function crear() {
+    if (!nuevo.valor.titulo.trim()) return
     const numero = await siguienteNumero()
     const { data } = await crearPresupuesto({
       numero,
-      titulo: titulo.trim() || 'Mantención',
-      cliente_id: clienteId || null,
+      titulo: nuevo.valor.titulo.trim(),
+      cliente_id: nuevo.valor.clienteId || null,
     })
-    setTitulo('')
+    nuevo.olvidar()
     setAbierta(false)
     void recargar()
     if (data) navegar(`/presupuestos/${data.id}`)
@@ -74,23 +82,38 @@ export function Presupuestos() {
 
       <Hoja abierta={abierta} titulo="Nuevo presupuesto" alCerrar={() => setAbierta(false)}>
         <div className="space-y-3">
+          {nuevo.recuperado && (
+            <p className="rounded-lg bg-tinte px-3 py-2 text-xs text-mut">
+              Recuperado lo que habías escrito antes. Todavía no está creado.
+            </p>
+          )}
           <Campo
             etiqueta="Título"
             autoFocus
-            value={titulo}
-            onChange={e => setTitulo(e.target.value)}
+            value={nuevo.valor.titulo}
+            onChange={e => nuevo.fijar({ titulo: e.target.value })}
             placeholder="Mantención trimestral"
+            pista="Hace falta: cada presupuesto se lleva un número correlativo."
           />
           <Selector
             etiqueta="Cliente"
             opciones={[['', 'Sin cliente'], ...(clientes.datos ?? []).map(c => [c.id, c.nombre] as [string, string])]}
-            value={clienteId}
-            onChange={e => setClienteId(e.target.value)}
+            value={nuevo.valor.clienteId}
+            onChange={e => nuevo.fijar({ clienteId: e.target.value })}
           />
           <div className="grid grid-cols-2 gap-2">
-            <Boton onClick={() => setAbierta(false)}>Cancelar</Boton>
+            <Boton onClick={() => setAbierta(false)}>Después</Boton>
             <Boton variante="acento" onClick={crear}>Crear</Boton>
           </div>
+          <button
+            onClick={() => {
+              nuevo.olvidar()
+              setAbierta(false)
+            }}
+            className="w-full text-xs text-faint"
+          >
+            Descartar lo escrito
+          </button>
         </div>
       </Hoja>
     </Pantalla>

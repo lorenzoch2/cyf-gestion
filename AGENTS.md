@@ -337,3 +337,25 @@ que se sale a la calle — quedaría guardado y a la vez invisible justo donde h
   formulario tiene que seguir andando igual.
 - **Esto no aplica al registro rápido de visitas.** Ahí la instantaneidad es la gracia, y por eso
   tiene «Deshacer» doce segundos en vez de confirmación previa.
+
+## Hoy
+
+La pantalla de la mañana ordena por quién se enoja si se olvida:
+
+1. **Mantenciones comprometidas** —lo de hoy y lo atrasado— encabeza. Una mantención olvidada es el
+   contrato recurrente que se cae, y el cliente no reclama: se va.
+2. **Pendientes** propios.
+3. **Se te pasaron** y **Volver a pasar hoy**, separados. Son dos cosas distintas a las ocho de la
+   mañana: una es deuda y la otra es agenda.
+
+## Buscar en todo
+
+Cada pantalla tiene su buscador, y sirve cuando uno ya sabe dónde está la cosa. En la calle pasa al
+revés: uno se acuerda del nombre del local y no de si quedó como prospecto, como cliente o como
+presupuesto. `buscarEnTodo()` consulta siete tablas en paralelo y agrupa por tipo.
+
+- **Las comas y los porcentajes se sacan del texto** antes de armar el filtro: son la sintaxis de
+  PostgREST y colarlas rompe la consulta entera.
+- **El resultado se guarda junto al texto que lo produjo**, así «está buscando» se deduce
+  —lo que hay en pantalla no corresponde a lo escrito— en vez de ser otro estado que apagar. Y una
+  respuesta que llega tarde, cuando ya se siguió escribiendo, se descarta por número de pedido.

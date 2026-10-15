@@ -4,6 +4,7 @@ import {
   Area, Aviso, Boton, Buscador, Campo, Cargando, Hoja, Pantalla, Selector, Tarjeta, Vacio,
 } from '../componentes/ui'
 import { RegistroRapido, type Deshacer } from '../componentes/RegistroRapido'
+import { useBorrador } from '../lib/borrador'
 import { IconoAgregar } from '../componentes/iconos'
 import { consultarProspectos, consultarRutas, crearProspecto, useConsulta } from '../lib/datos'
 import { plural } from '../lib/formato'
@@ -38,15 +39,24 @@ export function Prospectos() {
     [zona, estados.join(','), ruta, busqueda],
   )
 
-  // alta de un local que no estaba en el mapa
-  const [nombre, setNombre] = useState('')
-  const [rubro, setRubro] = useState('Minimarket')
-  const [direccion, setDireccion] = useState('')
-  const [telefono, setTelefono] = useState('')
-  const [zonaNueva, setZonaNueva] = useState('egana')
-  const [prioridad, setPrioridad] = useState<Prioridad>('alta')
-  const [contacto, setContacto] = useState('')
-  const [nota, setNota] = useState('')
+  /*
+    Alta de un local que no estaba en el mapa.
+
+    Va en un borrador y no en estados sueltos: se llena parado en la puerta,
+    con una mano, y cualquier cosa lo interrumpe. Volver a escribir el nombre,
+    el rubro, quién atendió y la nota es trabajo que nadie hace dos veces, así
+    que el dato se perdería.
+  */
+  const local = useBorrador('local-nuevo', {
+    nombre: '',
+    rubro: 'Minimarket',
+    direccion: '',
+    telefono: '',
+    zona: 'egana',
+    prioridad: 'alta' as Prioridad,
+    contacto: '',
+    nota: '',
+  })
 
   /*
     La ubicación se toma del teléfono, estando parado en la puerta.
@@ -72,26 +82,23 @@ export function Prospectos() {
   }
 
   async function agregar() {
-    if (!nombre.trim()) return
+    const v = local.valor
+    if (!v.nombre.trim()) return
     await crearProspecto({
-      nombre: nombre.trim(),
-      rubro,
-      zona: zonaNueva,
-      direccion: direccion || null,
-      telefono: telefono || null,
-      contacto_nombre: contacto.trim() || null,
-      notas: nota.trim() || null,
+      nombre: v.nombre.trim(),
+      rubro: v.rubro,
+      zona: v.zona,
+      direccion: v.direccion.trim() || null,
+      telefono: v.telefono.trim() || null,
+      contacto_nombre: v.contacto.trim() || null,
+      notas: v.nota.trim() || null,
       lat: ubicacion?.[0] ?? null,
       lng: ubicacion?.[1] ?? null,
-      prioridad,
+      prioridad: v.prioridad,
       estado: 'por_visitar',
       origen: 'manual',
     })
-    setNombre('')
-    setDireccion('')
-    setTelefono('')
-    setContacto('')
-    setNota('')
+    local.olvidar()
     setUbicacion(null)
     setAbierta(false)
     void recargar()
@@ -250,34 +257,53 @@ export function Prospectos() {
 
       <Hoja abierta={abierta} titulo="Agregar local" alCerrar={() => setAbierta(false)}>
         <div className="space-y-3">
-          <Campo etiqueta="Nombre" autoFocus value={nombre} onChange={e => setNombre(e.target.value)} />
+          {local.recuperado && (
+            <p className="rounded-lg bg-tinte px-3 py-2 text-xs text-mut">
+              Recuperado lo que habías escrito antes. Todavía no está guardado.
+            </p>
+          )}
+          <Campo
+            etiqueta="Nombre"
+            autoFocus
+            value={local.valor.nombre}
+            onChange={e => local.fijar({ nombre: e.target.value })}
+          />
           <Selector
             etiqueta="Rubro"
             opciones={RUBROS.map(r => [r, r] as [string, string])}
-            value={rubro}
-            onChange={e => setRubro(e.target.value)}
+            value={local.valor.rubro}
+            onChange={e => local.fijar({ rubro: e.target.value })}
           />
           <Selector
             etiqueta="Zona"
             opciones={Object.entries(ZONAS)}
-            value={zonaNueva}
-            onChange={e => setZonaNueva(e.target.value)}
+            value={local.valor.zona}
+            onChange={e => local.fijar({ zona: e.target.value })}
           />
-          <Campo etiqueta="Dirección" value={direccion} onChange={e => setDireccion(e.target.value)} />
+          <Campo
+            etiqueta="Dirección"
+            value={local.valor.direccion}
+            onChange={e => local.fijar({ direccion: e.target.value })}
+          />
           <div className="grid grid-cols-2 gap-2">
             <Campo
               etiqueta="Quién atendió"
-              value={contacto}
-              onChange={e => setContacto(e.target.value)}
+              value={local.valor.contacto}
+              onChange={e => local.fijar({ contacto: e.target.value })}
               placeholder="Sra. Marta, dueña"
             />
-            <Campo etiqueta="Teléfono" inputMode="tel" value={telefono} onChange={e => setTelefono(e.target.value)} />
+            <Campo
+              etiqueta="Teléfono"
+              inputMode="tel"
+              value={local.valor.telefono}
+              onChange={e => local.fijar({ telefono: e.target.value })}
+            />
           </div>
           <Area
             etiqueta="Nota"
             rows={2}
-            value={nota}
-            onChange={e => setNota(e.target.value)}
+            value={local.valor.nota}
+            onChange={e => local.fijar({ nota: e.target.value })}
             placeholder="Tiene dos visicooler y un split. El de atrás escarcha."
           />
 
@@ -298,13 +324,23 @@ export function Prospectos() {
           <Selector
             etiqueta="Prioridad"
             opciones={[['alta', 'Alta'], ['media', 'Media'], ['baja', 'Baja']]}
-            value={prioridad}
-            onChange={e => setPrioridad(e.target.value as Prioridad)}
+            value={local.valor.prioridad}
+            onChange={e => local.fijar({ prioridad: e.target.value as Prioridad })}
           />
           <div className="grid grid-cols-2 gap-2 pt-1">
-            <Boton onClick={() => setAbierta(false)}>Cancelar</Boton>
+            <Boton onClick={() => setAbierta(false)}>Después</Boton>
             <Boton variante="acento" onClick={agregar}>Guardar local</Boton>
           </div>
+          <button
+            onClick={() => {
+              local.olvidar()
+              setUbicacion(null)
+              setAbierta(false)
+            }}
+            className="w-full text-xs text-faint"
+          >
+            Descartar lo escrito
+          </button>
         </div>
       </Hoja>
     </Pantalla>
