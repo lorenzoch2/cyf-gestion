@@ -4,7 +4,8 @@ import {
 } from '../componentes/ui'
 import { IconoAgregar } from '../componentes/iconos'
 import {
-  consultarClientes, consultarOportunidades, crearOportunidad, guardarOportunidad, useConsulta,
+  borrarOportunidad, consultarClientes, consultarOportunidades, crearOportunidad,
+  guardarOportunidad, useConsulta,
 } from '../lib/datos'
 import { clp, fechaCorta } from '../lib/formato'
 import { ETAPAS, ETAPAS_ABIERTAS, type Cliente, type Etapa, type Oportunidad } from '../lib/tipos'
@@ -14,6 +15,7 @@ export function Negocios() {
   const [hoja, setHoja] = useState<'nuevo' | 'editar' | null>(null)
   const [enEdicion, setEnEdicion] = useState<Oportunidad | null>(null)
   const [cerrando, setCerrando] = useState<{ o: Oportunidad; etapa: Etapa } | null>(null)
+  const [borrando, setBorrando] = useState<Oportunidad | null>(null)
 
   const [titulo, setTitulo] = useState('')
   const [monto, setMonto] = useState('')
@@ -166,6 +168,21 @@ export function Negocios() {
             <Boton variante="acento" onClick={guardar}>Guardar</Boton>
           </div>
           <p className="text-xs text-faint">Nada cambia hasta que toques «Guardar».</p>
+
+          {/* Se podía crear un negocio y quedar atrapado con él en la lista. */}
+          {hoja === 'editar' && enEdicion && (
+            <Boton
+              variante="peligro"
+              className="w-full"
+              onClick={() => {
+                const o = enEdicion
+                setHoja(null)
+                setBorrando(o)
+              }}
+            >
+              Borrar este negocio
+            </Boton>
+          )}
         </div>
       </Hoja>
 
@@ -187,6 +204,17 @@ export function Negocios() {
           setEnEdicion(null)
           void recargar()
         }}
+      />
+      <Confirmar
+        abierta={borrando !== null}
+        titulo="Borrar el negocio"
+        detalle={`«${borrando?.titulo ?? ''}» desaparece de la lista. No se puede deshacer.`}
+        textoAceptar="Borrar"
+        peligro
+        alAceptar={() => {
+          if (borrando) void borrarOportunidad(borrando.id).then(() => void recargar())
+        }}
+        alCerrar={() => setBorrando(null)}
       />
     </Pantalla>
   )

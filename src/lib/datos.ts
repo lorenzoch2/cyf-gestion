@@ -159,6 +159,10 @@ export const consultarOportunidad = (id: string) =>
 export const crearOportunidad = (oportunidad: Partial<Oportunidad>) =>
   db().from('oportunidades').insert(oportunidad).select().single()
 
+/** Se podía crear un negocio de un toque y no había cómo deshacerlo. */
+export const borrarOportunidad = (id: string) =>
+  db().from('oportunidades').delete().eq('id', id)
+
 export const guardarOportunidad = (id: string, cambios: Partial<Oportunidad>) =>
   db().from('oportunidades').update(cambios).eq('id', id)
 

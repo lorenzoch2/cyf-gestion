@@ -319,3 +319,21 @@ que se sale a la calle — quedaría guardado y a la vez invisible justo donde h
   en su caja, no en la del taller.
 - **Los estados vacíos enseñan qué hacer y por qué.** «Sin equipos cargados» no dice nada; «de ahí
   sale qué se mide en cada visita» sí.
+
+## Nada se registra de un roce
+
+- **Un registro que nace de un toque accidental no es un registro: es basura que alguien va a tener
+  que limpiar.** «Crear negocio» en la ficha del prospecto creaba la oportunidad sin monto y sin
+  nada que revisar —el diálogo preguntaba, pero no había qué mirar—, y dejó dos negocios vacíos
+  duplicados. Ahora abre una hoja con qué es, monto y etapa, y se registra con un botón final.
+- **Y todo lo que se crea se puede borrar.** El caso completo era peor que el roce: se podía crear
+  un negocio por equivocación y no existía forma de sacarlo de la lista.
+- **Lo tipeado vive en el teléfono hasta que se confirma** (`useBorrador`). En la calle un
+  formulario se interrumpe solo: entra una llamada, se cierra la hoja, se bloquea el teléfono.
+  Perder lo escrito es poco trabajo y mucho dato, porque la segunda vez nadie lo vuelve a escribir.
+  El borrador se olvida al registrar, y la hoja avisa cuando recuperó algo para que nadie crea que
+  ya quedó guardado.
+- `localStorage` se lee y se escribe dentro de `try`: en ventana privada tira excepción y el
+  formulario tiene que seguir andando igual.
+- **Esto no aplica al registro rápido de visitas.** Ahí la instantaneidad es la gracia, y por eso
+  tiene «Deshacer» doce segundos en vez de confirmación previa.

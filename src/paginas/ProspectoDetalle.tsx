@@ -9,9 +9,10 @@ import {
   crearOportunidad, crearVisita, guardarProspecto, useConsulta,
 } from '../lib/datos'
 import { enlaceLlamada, enlaceMapa, enlaceWhatsapp, fechaCorta, hoyIso, sumarDias } from '../lib/formato'
+import { useBorrador } from '../lib/borrador'
 import {
-  ESTADOS_PROSPECTO, ORDEN_ESTADOS, RUBROS, TIPOS_VISITA, ZONAS,
-  type EstadoProspecto, type Prioridad, type Prospecto, type Ruta, type Visita,
+  ESTADOS_PROSPECTO, ETAPAS, ORDEN_ESTADOS, RUBROS, TIPOS_VISITA, ZONAS,
+  type EstadoProspecto, type Etapa, type Prioridad, type Prospecto, type Ruta, type Visita,
 } from '../lib/tipos'
 
 const RESULTADOS: [string, string][] = [
@@ -39,7 +40,11 @@ export function ProspectoDetalle() {
   const visitas = useConsulta<Visita[]>(() => consultarVisitas({ prospectoId: id }), [id])
   const rutas = useConsulta<Ruta[]>(() => consultarRutas(), [])
 
-  const [hoja, setHoja] = useState<'visita' | 'editar' | null>(null)
+  const [hoja, setHoja] = useState<'visita' | 'editar' | 'negocio' | null>(null)
+
+  // Lo tipeado sobrevive a cerrar la hoja, a una llamada y a bloquear el
+  // teléfono. Se olvida recién cuando el negocio queda registrado.
+  const negocio = useBorrador(`negocio:${id}`, { titulo: '', monto: '', etapa: 'evaluacion' })
   const [confirmar, setConfirmar] = useState<'borrar' | 'cliente' | 'negocio' | null>(null)
 
   // registrar visita
@@ -147,15 +152,31 @@ export function ProspectoDetalle() {
     navegar(`/clientes/${data.id}`)
   }
 
-  async function crearNegocio() {
+  /*
+    Abrir la hoja, no registrar.
+
+    Antes esto creaba el negocio de un solo toque, sin monto y sin preguntar:
+    dos toques por equivocación dejaban dos negocios vacíos en la lista, y no
+    había forma de borrarlos. Un registro que nace de un roce no es un
+    registro, es basura que después hay que limpiar.
+  */
+  function abrirNegocio() {
     if (!p) return
+    if (!negocio.valor.titulo) negocio.fijar({ titulo: `Mantención — ${p.nombre}` })
+    setHoja('negocio')
+  }
+
+  async function registrarNegocio() {
+    if (!p || !negocio.valor.titulo.trim()) return
     await crearOportunidad({
-      titulo: `Mantención — ${p.nombre}`,
+      titulo: negocio.valor.titulo.trim(),
+      monto_neto: negocio.valor.monto ? Number(negocio.valor.monto) : null,
       prospecto_id: p.id,
       cliente_id: p.cliente_id,
-      etapa: 'evaluacion',
+      etapa: negocio.valor.etapa as Etapa,
     })
     await guardarProspecto(p.id, { estado: p.estado === 'por_visitar' ? 'interesado' : p.estado })
+    negocio.olvidar()
     navegar('/negocios')
   }
 
@@ -262,7 +283,7 @@ export function ProspectoDetalle() {
       )}
 
       <div className="mt-4 grid grid-cols-2 gap-2">
-        <Boton onClick={() => setConfirmar('negocio')}>Crear negocio</Boton>
+        <Boton onClick={() => abrirNegocio()}>Crear negocio</Boton>
         <Boton onClick={() => setConfirmar('cliente')} disabled={p.estado === 'cliente'}>
           {p.estado === 'cliente' ? 'Ya es cliente' : 'Pasar a cliente'}
         </Boton>
@@ -395,14 +416,51 @@ export function ProspectoDetalle() {
         alCerrar={() => setConfirmar(null)}
         alAceptar={convertirEnCliente}
       />
-      <Confirmar
-        abierta={confirmar === 'negocio'}
-        titulo="¿Crear un negocio?"
-        detalle="Queda en la lista de negocios, en etapa de evaluación, para seguirle el rastro."
-        textoAceptar="Crear negocio"
-        alCerrar={() => setConfirmar(null)}
-        alAceptar={crearNegocio}
-      />
+      {/* ── Registrar un negocio ── */}
+      <Hoja abierta={hoja === 'negocio'} titulo="Nuevo negocio" alCerrar={() => setHoja(null)}>
+        <div className="space-y-3">
+          {negocio.recuperado && (
+            <p className="rounded-lg bg-tinte px-3 py-2 text-xs text-mut">
+              Recuperado lo que habías escrito antes. Todavía no está registrado.
+            </p>
+          )}
+          <Campo
+            etiqueta="Qué es"
+            autoFocus
+            value={negocio.valor.titulo}
+            onChange={e => negocio.fijar({ titulo: e.target.value })}
+          />
+          <Campo
+            etiqueta="Monto estimado, neto"
+            type="number"
+            inputMode="numeric"
+            value={negocio.valor.monto}
+            onChange={e => negocio.fijar({ monto: e.target.value })}
+            pista="Se puede dejar vacío y completarlo después, al cotizar."
+          />
+          <Selector
+            etiqueta="En qué está"
+            opciones={Object.entries(ETAPAS)}
+            value={negocio.valor.etapa}
+            onChange={e => negocio.fijar({ etapa: e.target.value })}
+          />
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            <Boton onClick={() => setHoja(null)}>Después</Boton>
+            <Boton variante="acento" onClick={() => void registrarNegocio()}>
+              Registrar negocio
+            </Boton>
+          </div>
+          <button
+            onClick={() => {
+              negocio.olvidar()
+              setHoja(null)
+            }}
+            className="w-full text-xs text-faint"
+          >
+            Descartar lo escrito
+          </button>
+        </div>
+      </Hoja>
     </Pantalla>
   )
 }
