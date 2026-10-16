@@ -53,3 +53,50 @@ export const IconoCerrar = () => (
 export const IconoPin = () => (
   <svg {...base} width="18" height="18"><path d="M20 10.5c0 5.5-8 11-8 11s-8-5.5-8-11a8 8 0 1 1 16 0z" /><circle cx="12" cy="10.5" r="2.5" /></svg>
 )
+
+/*
+  Iconos de módulo, para la portada.
+
+  Veinte filas de texto son veinte filas iguales: la vista no engancha en
+  ninguna y hay que leerlas todas para encontrar una. Con un icono al lado, la
+  mano aprende dónde está cada cosa y deja de leer.
+*/
+export const IconoLocal = () => (
+  <svg {...base}><path d="M3.5 9.5h17v9a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z" /><path d="M3 9.5 4.8 4.2A1.5 1.5 0 0 1 6.2 3.2h11.6a1.5 1.5 0 0 1 1.4 1l1.8 5.3" /><path d="M9.5 20.5v-5h5v5" /></svg>
+)
+export const IconoPendientes = () => (
+  <svg {...base}><path d="M9 11.5 11 13.5 15.5 9" /><rect x="3.5" y="4.5" width="17" height="15" rx="2.5" /><path d="M8 2.5v4M16 2.5v4" /></svg>
+)
+export const IconoRuta = () => (
+  <svg {...base}><circle cx="6" cy="6" r="2.5" /><circle cx="18" cy="18" r="2.5" /><path d="M6 8.5v4a4 4 0 0 0 4 4h5.5" /></svg>
+)
+export const IconoGuia = () => (
+  <svg {...base}><path d="M4 5.5A2 2 0 0 1 6 3.5h5v17H6a2 2 0 0 0-2 2z" /><path d="M20 5.5a2 2 0 0 0-2-2h-5v17h5a2 2 0 0 1 2 2z" /></svg>
+)
+export const IconoPresupuesto = () => (
+  <svg {...base}><path d="M5.5 2.5h13v19l-3-2-3 2-3-2-3 2z" /><path d="M9 8h6M9 12h6" /></svg>
+)
+export const IconoTarifario = () => (
+  <svg {...base}><path d="M12 3v18" /><path d="M16.5 7H10a2.5 2.5 0 0 0 0 5h4a2.5 2.5 0 0 1 0 5H7" /></svg>
+)
+export const IconoCaja = () => (
+  <svg {...base}><rect x="2.5" y="6" width="19" height="13" rx="2.5" /><path d="M2.5 10.5h19" /><circle cx="17" cy="15" r="1.2" /></svg>
+)
+export const IconoMantencion = () => (
+  <svg {...base}><path d="M14.5 6.5a4 4 0 0 1-5.4 5.4L4 17v3h3l5.1-5.1a4 4 0 0 1 5.4-5.4l-2.6 2.6 1.9 1.9 2.6-2.6a4 4 0 0 1-4.9-4.9z" /></svg>
+)
+export const IconoInforme = () => (
+  <svg {...base}><path d="M14 2.5H7a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7.5z" /><path d="M14 2.5v5h5" /><path d="M9 13h6M9 16.5h4" /></svg>
+)
+export const IconoInventario = () => (
+  <svg {...base}><path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5z" /><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9" /></svg>
+)
+export const IconoCompras = () => (
+  <svg {...base}><path d="M2.5 3.5h2.2l2.3 11.5h10.5" /><path d="M6.4 6.5h14l-1.6 6.5H7.7" /><circle cx="9" cy="19" r="1.5" /><circle cx="17.5" cy="19" r="1.5" /></svg>
+)
+export const IconoEquipo = () => (
+  <svg {...base}><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20a6.5 6.5 0 0 1 13 0" /><path d="M16.5 5.2a3.5 3.5 0 0 1 0 5.6M18.5 20a6.6 6.6 0 0 0-2-4.7" /></svg>
+)
+export const IconoDocumentos = () => (
+  <svg {...base}><rect x="3.5" y="5.5" width="17" height="14" rx="2.5" /><path d="M3.5 10h17" /><path d="M8 3v4M16 3v4" /><path d="M12 13v3.5M12 16.5h.01" /></svg>
+)

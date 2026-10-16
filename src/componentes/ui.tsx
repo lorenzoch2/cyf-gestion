@@ -30,7 +30,7 @@ export function Pantalla({
         pantalla. Sin esto, en un notebook las tarjetas se estiran a 1.200 px
         mientras la barra de abajo mide 512 y la app se ve rota.
       */}
-      <header className="sobre-seguro sticky top-0 z-20 border-b border-linea bg-papel/95 backdrop-blur">
+      <header className="sobre-seguro sticky top-0 z-20 border-b border-linea bg-papel/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-lg items-start gap-3 px-4 py-3">
           {volver && (
             <button
@@ -134,7 +134,82 @@ export function Selector({
 }
 
 export function Tarjeta({ className = '', children }: { className?: string; children: ReactNode }) {
-  return <div className={`rounded-xl border border-linea bg-white p-4 ${className}`}>{children}</div>
+  return (
+    <div className={`rounded-xl border border-linea bg-white shadow-carta p-4 ${className}`}>
+      {children}
+    </div>
+  )
+}
+
+/**
+ * El rótulo de sección: mono, versalitas, latón oscuro.
+ *
+ * Estaba repetido con las mismas seis clases en una docena de pantallas y en
+ * cada una con un gris distinto. Es la voz de la marca en la app, así que vive
+ * en un solo lugar.
+ */
+export function Rotulo({ className = '', children }: { className?: string; children: ReactNode }) {
+  return (
+    <h2
+      className={`font-mono text-[0.68rem] uppercase tracking-[0.16em] text-laton-dk ${className}`}
+    >
+      {children}
+    </h2>
+  )
+}
+
+/**
+ * Una cifra, en mono y con números de ancho fijo.
+ *
+ * El punto de toda la pantalla suele ser el número: cuántos locales quedan,
+ * cuánto hay en negocios abiertos, cuánto IVA se debe. Puesto en la misma letra
+ * del texto se lee como una palabra más; en mono se lee como una medición.
+ */
+export function Cifra({
+  tamano = 'md',
+  tono = 'grafito',
+  className = '',
+  children,
+}: {
+  tamano?: 'sm' | 'md' | 'lg'
+  tono?: 'grafito' | 'laton' | 'papel' | 'mut' | 'rojo' | 'verde'
+  className?: string
+  children: ReactNode
+}) {
+  const tamanos = {
+    sm: 'text-base',
+    md: 'text-[1.6rem] leading-none',
+    lg: 'text-[2.1rem] leading-none',
+  }
+  const tonos = {
+    grafito: 'text-grafito',
+    // Latón claro: sobre el panel oscuro es donde el latón sí puede ser texto.
+    laton: 'text-laton-lt',
+    papel: 'text-papel',
+    mut: 'text-mut',
+    rojo: 'text-rojo',
+    verde: 'text-verde',
+  }
+  return (
+    <span
+      className={`block font-mono font-medium tracking-tight ${tamanos[tamano]} ${tonos[tono]} ${className}`}
+    >
+      {children}
+    </span>
+  )
+}
+
+/**
+ * El panel: la superficie oscura donde se leen las cifras.
+ *
+ * Es la única zona oscura de la app y está reservada a los números del día. Que
+ * sea una sola hace que sea *la* zona donde se mira primero, que es justamente
+ * lo que se quiere de un tablero.
+ */
+export function Panel({ className = '', children }: { className?: string; children: ReactNode }) {
+  return (
+    <div className={`rounded-xl bg-panel shadow-panel text-papel ${className}`}>{children}</div>
+  )
 }
 
 export function Etiqueta({
@@ -189,7 +264,7 @@ export function Cargando() {
 
 export function Vacio({ texto }: { texto: string }) {
   return (
-    <div className="rounded-xl border border-dashed border-linea-2 px-4 py-10 text-center text-sm text-mut">
+    <div className="rounded-xl border border-dashed border-linea-2 px-4 py-6 text-center text-sm text-mut">
       {texto}
     </div>
   )

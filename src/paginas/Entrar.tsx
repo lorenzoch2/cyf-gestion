@@ -1,7 +1,15 @@
 import { useState, type FormEvent } from 'react'
 import { Boton, Campo, Error } from '../componentes/ui'
+import { Marca } from '../componentes/Marca'
 import { useSesion } from '../lib/sesion'
 
+/*
+  La primera pantalla de la empresa.
+
+  Antes era un título y dos campos flotando en el papel: la misma cara que
+  tendría cualquier formulario. Ahora entra la celosía, que es lo único que
+  dice de quién es esto antes de escribir una letra.
+*/
 export function Entrar() {
   const { entrar } = useSesion()
   const [email, setEmail] = useState('')
@@ -17,11 +25,12 @@ export function Entrar() {
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-6">
-      <p className="font-mono text-xs uppercase tracking-[0.16em] text-laton-dk">
+    <div className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-6 py-10">
+      <Marca tamano={52} />
+      <p className="mt-5 font-mono text-[0.68rem] uppercase tracking-[0.16em] text-laton-dk">
         Calor y Frío Industrial
       </p>
-      <h1 className="mt-2 text-2xl font-semibold tracking-tight">Gestión</h1>
+      <h1 className="mt-1.5 text-[1.75rem] font-semibold leading-tight tracking-tight">Gestión</h1>
       <p className="mt-2 text-sm text-mut">
         Prospectos, clientes, negocios y tarifario de la empresa.
       </p>

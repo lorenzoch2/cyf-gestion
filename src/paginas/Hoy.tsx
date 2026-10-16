@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Cargando, Etiqueta, Pantalla, Tarjeta, Vacio } from '../componentes/ui'
+import { Cargando, Cifra, Etiqueta, Panel, Pantalla, Rotulo, Tarjeta, Vacio } from '../componentes/ui'
 import {
   consultarClientes, consultarMantenciones, consultarResumen, consultarTareas, guardarTarea,
   useConsulta,
@@ -57,6 +57,21 @@ export function Hoy() {
   const atrasados = seguir.filter(p => (diasHasta(p.proximo_paso_en) ?? 0) < 0)
   const paraHoy = seguir.filter(p => (diasHasta(p.proximo_paso_en) ?? 0) >= 0)
 
+  /*
+    El día limpio.
+
+    Sin nada pendiente la pantalla mostraba dos cajas punteadas enormes, una
+    debajo de otra, diciendo las dos que no había nada. Eso ocupa media
+    pantalla para dar cero información. Cuando no hay nada que arrastrar, lo
+    único que corresponde decir es qué hacer ahora.
+  */
+  const diaLimpio =
+    !tareas.cargando &&
+    !seguimientos.cargando &&
+    pendientes.length === 0 &&
+    seguir.length === 0 &&
+    tocaHoy.length === 0
+
   async function marcar(tarea: Tarea) {
     await guardarTarea(tarea.id, { hecha: true, hecha_en: new Date().toISOString() })
     void tareas.recargar()
@@ -67,38 +82,45 @@ export function Hoy() {
     <Pantalla titulo="Hoy" bajada={new Date().toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' })}>
       {resumen.cargando && <Cargando />}
 
+      {/*
+        Las dos cifras van sobre el panel oscuro y no en dos tarjetas blancas.
+        Son la lectura del día —cuánta calle queda y cuánta plata está en
+        juego— y en una app que por lo demás es toda clara, la zona oscura es
+        donde el ojo cae primero. Eso es exactamente lo que se quiere de un
+        tablero.
+      */}
       {r && (
-        <div className="grid grid-cols-2 gap-3">
-          <Link to="/prospectos">
-            <Tarjeta className="h-full">
-              <p className="font-mono text-2xl font-medium">{r.porVisitar}</p>
-              <p className="mt-1 text-sm text-mut">
+        <Panel className="px-4 py-4">
+          <div className="grid grid-cols-2 divide-x divide-panel-linea">
+            <Link to="/prospectos" className="pr-4">
+              <Cifra tono="laton">{r.porVisitar}</Cifra>
+              <span className="mt-1.5 block text-[0.78rem] leading-tight text-faint">
                 {r.porVisitar === 1 ? 'local por visitar' : 'locales por visitar'}
-              </p>
+              </span>
               {r.visitadosHoy > 0 && (
-                <p className="mt-2 text-xs text-verde">{r.visitadosHoy} visitados hoy</p>
+                <span className="mt-1.5 block font-mono text-[0.72rem] text-verde">
+                  +{r.visitadosHoy} visitados hoy
+                </span>
               )}
-            </Tarjeta>
-          </Link>
-          <Link to="/negocios">
-            <Tarjeta className="h-full">
-              <p className="font-mono text-2xl font-medium">{clp(r.montoEnJuego)}</p>
-              <p className="mt-1 text-sm text-mut">
+            </Link>
+            <Link to="/negocios" className="pl-4">
+              <Cifra tono="papel">{clp(r.montoEnJuego)}</Cifra>
+              <span className="mt-1.5 block text-[0.78rem] leading-tight text-faint">
                 en {plural(r.oportunidadesAbiertas, 'negocio abierto', 'negocios abiertos')}
-              </p>
-            </Tarjeta>
-          </Link>
-        </div>
+              </span>
+            </Link>
+          </div>
+        </Panel>
       )}
 
       {tocaHoy.length > 0 && (
         <section className="mt-6">
-          <h2 className="mb-2 flex items-baseline justify-between text-sm font-semibold">
+          <Rotulo className="mb-2 flex items-baseline justify-between">
             Mantenciones comprometidas
-            <Link to="/mantenciones" className="text-xs font-normal text-acero-dk">
+            <Link to="/mantenciones" className="font-sans text-xs normal-case tracking-normal text-acero-dk">
               ver todas
             </Link>
-          </h2>
+          </Rotulo>
           <ul className="space-y-2">
             {tocaHoy.slice(0, 5).map(m => {
               const dias = diasHasta(m.programada_el) ?? 0
@@ -130,13 +152,30 @@ export function Hoy() {
         </section>
       )}
 
-      <section className="mt-6">
-        <h2 className="mb-2 flex items-baseline justify-between text-sm font-semibold">
+      {diaLimpio && (
+        <section className="mt-6">
+          <Rotulo className="mb-2">Nada arrastrando</Rotulo>
+          <Link to="/prospectos">
+            <Tarjeta className="border-l-4 border-l-laton">
+              <p className="text-sm">
+                Sin pendientes, sin seguimientos y sin mantenciones comprometidas. El día está
+                limpio para hacer calle.
+              </p>
+              <p className="mt-2 text-sm font-medium text-acero-dk">
+                Ver los locales por visitar →
+              </p>
+            </Tarjeta>
+          </Link>
+        </section>
+      )}
+
+      <section className={diaLimpio ? 'hidden' : 'mt-6'}>
+        <Rotulo className="mb-2 flex items-baseline justify-between">
           Pendientes
-          <Link to="/tareas" className="text-xs font-normal text-acero-dk">
+          <Link to="/tareas" className="font-sans text-xs normal-case tracking-normal text-acero-dk">
             ver todos
           </Link>
-        </h2>
+        </Rotulo>
         {tareas.cargando ? (
           <Cargando />
         ) : pendientes.length === 0 ? (
@@ -176,12 +215,10 @@ export function Hoy() {
         .filter(grupo => grupo.lista.length > 0)
         .map(grupo => (
           <section key={grupo.titulo} className="mt-6">
-            <h2 className="mb-2 text-sm font-semibold">
+            <Rotulo className="mb-2">
               {grupo.titulo}
-              <span className="ml-2 font-mono text-xs font-normal text-faint">
-                {grupo.lista.length}
-              </span>
-            </h2>
+              <span className="ml-2 text-faint">{grupo.lista.length}</span>
+            </Rotulo>
             <ul className="space-y-2">
               {grupo.lista.map(p => (
                 <li key={p.id}>
@@ -200,16 +237,16 @@ export function Hoy() {
           </section>
         ))}
 
-      {seguir.length === 0 && (
+      {seguir.length === 0 && !diaLimpio && (
         <section className="mt-6">
-          <h2 className="mb-2 text-sm font-semibold">Volver a pasar</h2>
+          <Rotulo className="mb-2">Volver a pasar</Rotulo>
           <Vacio texto="Nadie te está esperando hoy. Los seguimientos se agendan al registrar una visita." />
         </section>
       )}
 
       {(negocios.datos ?? []).length > 0 && (
         <section className="mt-6">
-          <h2 className="mb-2 text-sm font-semibold">Esperando respuesta</h2>
+          <Rotulo className="mb-2">Esperando respuesta</Rotulo>
           <ul className="space-y-2">
             {(negocios.datos ?? []).map(o => (
               <li key={o.id}>

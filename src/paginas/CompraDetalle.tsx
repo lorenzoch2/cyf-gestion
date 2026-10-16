@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import {
-  Area, Boton, Campo, Cargando, Confirmar, Dato, Hoja, Pantalla, Tarjeta,
-} from '../componentes/ui'
+import { Area, Boton, Campo, Cargando, Confirmar, Dato, Hoja, Pantalla, Rotulo, Tarjeta } from '../componentes/ui'
 import {
   agregarFaltantesDeProveedor, borrarLineaOrden, borrarOrden, consultarLineasOrden,
   consultarOrden, consultarProveedores, crearLineaOrden, guardarOrden, recibirOrden, useConsulta,
@@ -76,7 +74,7 @@ export function CompraDetalle() {
         {aviso && <p className="text-sm text-mut">{aviso}</p>}
 
         <div>
-          <h2 className="mb-2 font-mono text-xs uppercase tracking-wider text-faint">Líneas</h2>
+          <Rotulo className="mb-2">Líneas</Rotulo>
           {(lineas.datos ?? []).length === 0 ? (
             <p className="text-sm text-mut">
               Sin líneas todavía. «Traer lo que falta» las saca de las cotizaciones de este

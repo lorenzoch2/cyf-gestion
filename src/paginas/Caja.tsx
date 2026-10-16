@@ -1,7 +1,5 @@
 import { useMemo, useState } from 'react'
-import {
-  Area, Boton, Campo, Cargando, Dato, Hoja, Pantalla, Selector, Tarjeta, Vacio,
-} from '../componentes/ui'
+import { Area, Boton, Campo, Cargando, Dato, Hoja, Pantalla, Rotulo, Selector, Tarjeta, Vacio } from '../componentes/ui'
 import {
   borrarMovimiento, consultarClientes, consultarMovimientos, consultarPendientes,
   consultarProveedores, crearMovimiento, guardarMovimiento, useConsulta,
@@ -122,9 +120,7 @@ export function Caja() {
         ) : (
           <>
             <Tarjeta className="space-y-1 p-3">
-              <p className="mb-1 font-mono text-xs uppercase tracking-wider text-faint">
-                El mes, en neto
-              </p>
+              <Rotulo className="mb-1">El mes, en neto</Rotulo>
               <Dato etiqueta="Ingresos">{clp(resumen.ingresoNeto)}</Dato>
               <Dato etiqueta="Egresos">{clp(resumen.egresoNeto)}</Dato>
               <Dato etiqueta="Diferencia">
@@ -135,9 +131,7 @@ export function Caja() {
             </Tarjeta>
 
             <Tarjeta className="space-y-1 p-3">
-              <p className="mb-1 font-mono text-xs uppercase tracking-wider text-faint">
-                Para el F29
-              </p>
+              <Rotulo className="mb-1">Para el F29</Rotulo>
               <Dato etiqueta="IVA débito, de lo emitido">{clp(resumen.debito)}</Dato>
               <Dato etiqueta="IVA crédito, de lo recibido">{clp(resumen.credito)}</Dato>
               <Dato etiqueta={resumen.iva >= 0 ? 'IVA a pagar' : 'Remanente del mes'}>
@@ -151,9 +145,7 @@ export function Caja() {
             </Tarjeta>
 
             <Tarjeta className="space-y-1 p-3">
-              <p className="mb-1 font-mono text-xs uppercase tracking-wider text-faint">
-                Movimiento de caja
-              </p>
+              <Rotulo className="mb-1">Movimiento de caja</Rotulo>
               <Dato etiqueta="Cobrado">{clp(resumen.cobrado)}</Dato>
               <Dato etiqueta="Pagado">{clp(resumen.pagado)}</Dato>
               <Dato etiqueta="Quedó en caja">
@@ -167,9 +159,9 @@ export function Caja() {
 
         {(porCobrar.length > 0 || porPagar.length > 0) && (
           <section>
-            <h2 className="mb-2 font-mono text-xs uppercase tracking-wider text-faint">
+            <Rotulo className="mb-2">
               Pendiente, de todos los meses
-            </h2>
+            </Rotulo>
             <div className="grid grid-cols-2 gap-2">
               <Tarjeta className="p-3">
                 <p className="text-sm text-mut">Por cobrar</p>

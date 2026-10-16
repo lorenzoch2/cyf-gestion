@@ -1,8 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import {
-  Area, Boton, Buscador, Campo, Cargando, Hoja, Pantalla, Selector, Tarjeta, Vacio,
-} from '../componentes/ui'
+import { Area, Boton, Buscador, Campo, Cargando, Hoja, Pantalla, Rotulo, Selector, Tarjeta, Vacio } from '../componentes/ui'
 import {
   borrarCotizacionInsumo, consultarCatalogo, consultarCotizacionesInsumo, consultarExistencias,
   consultarProveedores, consultarTecnicos, crearCotizacionInsumo, crearInsumo, fijarExistencia,
@@ -193,9 +191,9 @@ export function Inventario() {
         <div className="mt-4 space-y-5">
           {porCategoria.map(([categoria, items]) => (
             <section key={categoria}>
-              <h2 className="mb-2 font-mono text-xs uppercase tracking-wider text-faint">
+              <Rotulo className="mb-2">
                 {categoria}
-              </h2>
+              </Rotulo>
               <ul className="space-y-2">
                 {items.map(i => {
                   const estado = estadoDe(i)
@@ -207,16 +205,16 @@ export function Inventario() {
                         <Tarjeta className={`border-l-4 p-3 ${pinta.borde}`}>
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
-                              <p className="font-medium">
-                                {i.nombre}
-                                {i.critico && (
-                                  <span className="ml-1.5 text-laton-dk" title="Crítico">
-                                    ·
-                                  </span>
-                                )}
-                              </p>
+                              <p className="font-medium">{i.nombre}</p>
+                              {/*
+                                «Crítico» va en la fila de datos y no pegado al
+                                nombre: colgando al final se leía como un
+                                separador suelto, y cuando el nombre envolvía
+                                quedaba solo en una línea.
+                              */}
                               <p className="mt-0.5 flex gap-2 font-mono text-xs text-faint">
                                 <span>{i.codigo}</span>
+                                {i.critico && <span className="text-laton-dk">crítico</span>}
                                 <span>{AMBITOS[i.ambito].corta}</span>
                                 {fila?.cantidad ? (
                                   <span>

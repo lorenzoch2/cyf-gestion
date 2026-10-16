@@ -1,7 +1,5 @@
 import { useState } from 'react'
-import {
-  Boton, Campo, Cargando, Confirmar, Hoja, Pantalla, Selector, Tarjeta, Vacio,
-} from '../componentes/ui'
+import { Boton, Campo, Cargando, Confirmar, Hoja, Pantalla, Rotulo, Selector, Tarjeta, Vacio } from '../componentes/ui'
 import { IconoAgregar } from '../componentes/iconos'
 import {
   borrarServicio, borrarTarifario, consultarClientes, consultarPrecios, consultarServicios,
@@ -170,9 +168,7 @@ export function Tarifario() {
             if (deCategoria.length === 0) return null
             return (
               <section key={categoria}>
-                <h2 className="mb-2 font-mono text-xs uppercase tracking-[0.14em] text-laton-dk">
-                  {CATEGORIAS[categoria]}
-                </h2>
+                <Rotulo className="mb-2">{CATEGORIAS[categoria]}</Rotulo>
                 <ul className="space-y-2">
                   {deCategoria.map(s => {
                     const { valor, heredado } = precioDe(s)

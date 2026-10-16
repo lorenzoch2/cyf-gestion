@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Buscador, Cargando, Pantalla, Tarjeta, Vacio } from '../componentes/ui'
+import { Buscador, Cargando, Pantalla, Rotulo, Tarjeta, Vacio } from '../componentes/ui'
 import { buscarEnTodo, type Hallado } from '../lib/datos'
 
 /*
@@ -84,9 +84,9 @@ export function Buscar() {
         <div className="mt-4 space-y-5">
           {grupos.map(([tipo, lista]) => (
             <section key={tipo}>
-              <h2 className="mb-2 font-mono text-xs uppercase tracking-wider text-faint">
+              <Rotulo className="mb-2">
                 {ETIQUETAS[tipo]} · {lista.length}
-              </h2>
+              </Rotulo>
               <ul className="space-y-2">
                 {lista.map(h => (
                   <li key={tipo + h.id}>

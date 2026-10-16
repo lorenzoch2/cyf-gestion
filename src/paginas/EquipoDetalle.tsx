@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Cargando, Pantalla, Tarjeta, Vacio } from '../componentes/ui'
+import { Cargando, Pantalla, Rotulo, Tarjeta, Vacio } from '../componentes/ui'
 import { consultarEquipo, historialEquipo, useConsulta } from '../lib/datos'
 import { compararMediciones, familiaDe, leerMediciones } from '../lib/diagnostico'
 import { fechaCorta, plural } from '../lib/formato'
@@ -101,9 +101,9 @@ export function EquipoDetalle() {
 
         {pistas.length > 0 && (
           <section>
-            <h2 className="mb-2 font-mono text-xs uppercase tracking-wider text-faint">
+            <Rotulo className="mb-2">
               Cómo está hoy
-            </h2>
+            </Rotulo>
             <div className="space-y-2">
               {pistas.map(p => (
                 <Tarjeta key={p.titulo} className="p-3">
@@ -125,9 +125,9 @@ export function EquipoDetalle() {
         )}
 
         <section>
-          <h2 className="mb-2 font-mono text-xs uppercase tracking-wider text-faint">
+          <Rotulo className="mb-2">
             Historia · {plural(visitas.length, 'visita', 'visitas')}
-          </h2>
+          </Rotulo>
 
           {historial.cargando ? (
             <Cargando />

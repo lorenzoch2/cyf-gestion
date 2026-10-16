@@ -4,6 +4,12 @@
   Paleta de la marca: latón y acero sobre grafito y papel. Las mismas reglas de
   contraste del manual: el latón como texto sobre fondo claro va en su versión
   oscura, el acero es estructura y el latón es acción.
+
+  Tres superficies, no dos. Antes el papel era #f8f7f4 y la tarjeta blanca:
+  dos por ciento de diferencia, así que las tarjetas no se veían como objetos
+  sino como manchas apenas más claras. Ahora el papel es más papel, la tarjeta
+  es blanca de verdad y existe una tercera superficie —el panel grafito— para
+  las cifras. Un instrumento tiene lectura oscura; un formulario, no.
 */
 @theme {
   --color-laton: #a9803f;
@@ -11,15 +17,22 @@
   --color-laton-lt: #c49c58;
   --color-acero: #4f73a8;
   --color-acero-dk: #3a5880;
+  --color-acero-lt: #7e9cc9;
   --color-grafito: #14181f;
   --color-mut: #59626f;
   --color-faint: #838c99;
-  --color-papel: #f8f7f4;
-  --color-tinte: #eef1f6;
-  --color-linea: #e0e4ea;
-  --color-linea-2: #ccd3dd;
+  --color-papel: #f3f1ec;
+  --color-tinte: #e9ecf2;
+  --color-linea: #dde1e8;
+  --color-linea-2: #c6ced9;
   --color-verde: #2f7d58;
   --color-rojo: #b3261e;
+  /* El panel: la superficie oscura donde las cifras se leen como lectura de
+     instrumento. El latón sólo funciona como texto sobre fondo oscuro, y es
+     exactamente acá donde se usa. */
+  --color-panel: #161b23;
+  --color-panel-2: #1f2630;
+  --color-panel-linea: #2c3542;
   /* Colores de estado de gestión: tienen que distinguirse de un vistazo,
      en la lista y en el mapa. */
   --color-morado: #6b4fa8;
@@ -27,6 +40,11 @@
 
   --font-sans: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  /* Apenas una sombra: separa la tarjeta del papel sin que parezca un botón
+     flotante. */
+  --shadow-carta: 0 1px 2px rgb(20 24 31 / 0.05), 0 1px 3px rgb(20 24 31 / 0.04);
+  --shadow-panel: 0 2px 10px rgb(20 24 31 / 0.14);
 }
 
 html {
@@ -40,6 +58,16 @@ body {
   color: var(--color-grafito);
   /* El teclado del celular no debe empujar el diseño. */
   overscroll-behavior-y: none;
+}
+
+/*
+  Las cifras se leen como datos, no como texto.
+
+  La mono lleva los números con ancho fijo: así una columna de pesos queda
+  alineada y un contador que sube de 9 a 10 no mueve lo que tiene al lado.
+*/
+.font-mono {
+  font-variant-numeric: tabular-nums;
 }
 
 /* El área segura del teléfono: barra de gestos abajo, notch arriba. */

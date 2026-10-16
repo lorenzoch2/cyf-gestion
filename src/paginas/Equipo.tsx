@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Boton, Campo, Cargando, Hoja, Pantalla, Tarjeta, Vacio } from '../componentes/ui'
+import { Boton, Campo, Cargando, Hoja, Pantalla, Rotulo, Tarjeta, Vacio } from '../componentes/ui'
 import {
   consultarCatalogo, consultarExistencias, consultarTecnicos, crearTecnico, guardarTecnico,
   useConsulta,
@@ -108,9 +108,9 @@ export function Equipo() {
       )}
 
       <section className="mt-8">
-        <h2 className="mb-2 font-mono text-xs uppercase tracking-wider text-faint">
+        <Rotulo className="mb-2">
           Cuentas de acceso
-        </h2>
+        </Rotulo>
         <Tarjeta className="p-3">
           <p className="text-sm text-mut">
             Una cuenta deja entrar a la app desde otro teléfono. Es distinto de agregar a una

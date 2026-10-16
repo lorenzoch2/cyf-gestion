@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import {
-  Area, Boton, Campo, Cargando, Confirmar, Hoja, Pantalla, Selector, Tarjeta,
-} from '../componentes/ui'
+import { Area, Boton, Campo, Cargando, Confirmar, Hoja, Pantalla, Rotulo, Selector, Tarjeta } from '../componentes/ui'
 import { Conformidad, Firma } from '../componentes/Firma'
 import {
   borrarFotoFila, borrarHallazgo, borrarInforme, borrarInformeEquipo, borrarMaterial,
@@ -35,7 +33,7 @@ import {
 function Seccion({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
     <section>
-      <h2 className="mb-2 font-mono text-xs uppercase tracking-wider text-faint">{titulo}</h2>
+      <Rotulo className="mb-2">{titulo}</Rotulo>
       {children}
     </section>
   )
