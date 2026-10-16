@@ -34,7 +34,28 @@ function llave(insumoId: string, tecnicoId: string | null) {
 
 export function Inventario() {
   const [parametros] = useSearchParams()
-  const [dueno, setDueno] = useState(parametros.get('tecnico') ?? 'taller')
+  /*
+    Abre mostrando todo.
+
+    Antes partía en «Taller y camioneta», que esconde los ítems personales —la
+    mitad del catálogo— sin que se note que están escondidos. Entrar y ver la
+    lista completa es lo que uno espera de algo que se llama inventario; filtrar
+    por dueño es una decisión que se toma después, a propósito.
+
+    El `?tecnico=` sigue mandando: es el enlace «Ver su caja» de la pantalla de
+    equipo, y ahí sí se pidió una caja en particular.
+  */
+  const tecnicoPedido = parametros.get('tecnico')
+  const [dueno, setDueno] = useState(tecnicoPedido ?? 'todo')
+
+  // El parámetro sólo se leía al montar, y entrar de inventario a inventario
+  // no remonta nada: «Ver su caja» quedaba ignorado. Se sincroniza acá, en el
+  // render, que es como React pide ajustar estado derivado de props.
+  const [ultimoPedido, setUltimoPedido] = useState(tecnicoPedido)
+  if (tecnicoPedido !== ultimoPedido) {
+    setUltimoPedido(tecnicoPedido)
+    if (tecnicoPedido) setDueno(tecnicoPedido)
+  }
   const [estados, setEstados] = useState<EstadoExistencia[]>([])
   const [soloCriticos, setSoloCriticos] = useState(false)
   const [busqueda, setBusqueda] = useState('')
@@ -104,9 +125,11 @@ export function Inventario() {
   }
 
   const opcionesDueno: [string, string][] = [
-    ['taller', 'Taller y camioneta'],
-    ...(tecnicos.datos ?? []).map(t => [t.id, t.nombre] as [string, string]),
-    ['todo', 'Todo junto'],
+    ['todo', 'Todo el inventario'],
+    ['taller', 'Sólo taller y camioneta'],
+    ...(tecnicos.datos ?? []).map(
+      t => [t.id, `Sólo la caja de ${t.nombre.split(' ')[0]}`] as [string, string],
+    ),
   ]
 
   return (
