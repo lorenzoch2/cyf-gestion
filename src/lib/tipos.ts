@@ -7,7 +7,8 @@ export type Etapa = 'nueva' | 'evaluacion' | 'cotizada' | 'negociacion' | 'ganad
 export type TipoVisita = 'prospeccion' | 'evaluacion' | 'mantencion' | 'correctivo' | 'instalacion'
 export type PlanContrato = 'trimestral' | 'semestral' | 'anual' | 'por_evento'
 export type EstadoPresupuesto = 'borrador' | 'enviado' | 'aceptado' | 'rechazado'
-export type CategoriaServicio = 'climatizacion' | 'refrigeracion' | 'adicional'
+export type CategoriaServicio =
+  | 'climatizacion' | 'refrigeracion' | 'instalacion' | 'adicional'
 export type TipoTarifario = 'base' | 'zona' | 'cliente'
 export type EstadoRuta = 'planificada' | 'en_curso' | 'terminada'
 
@@ -311,9 +312,11 @@ export const ESTADOS_PRESUPUESTO: Record<EstadoPresupuesto, string> = {
   rechazado: 'Rechazado',
 }
 
+/* El orden de las claves es el orden en que se muestran las secciones. */
 export const CATEGORIAS: Record<CategoriaServicio, string> = {
-  climatizacion: 'Climatización',
-  refrigeracion: 'Refrigeración comercial',
+  climatizacion: 'Mantención — climatización',
+  refrigeracion: 'Mantención — refrigeración comercial',
+  instalacion: 'Instalación',
   adicional: 'Servicios adicionales',
 }
 

@@ -144,7 +144,8 @@ create table if not exists tareas (
 -- ─── Tarifario ──────────────────────────────────────────────────────────────
 create table if not exists servicios (
   id          uuid primary key default gen_random_uuid(),
-  categoria   text not null check (categoria in ('climatizacion', 'refrigeracion', 'adicional')),
+  categoria   text not null
+              check (categoria in ('climatizacion', 'refrigeracion', 'instalacion', 'adicional')),
   nombre      text not null unique,
   unidad      text not null default 'equipo',
   precio_neto integer not null,
