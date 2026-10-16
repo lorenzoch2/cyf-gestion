@@ -134,9 +134,24 @@ export function PresupuestoDetalle() {
     window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank')
   }
 
+  /*
+    La categoría va delante del nombre para poder distinguir, en una lista
+    larga, la mantención de un split de la instalación del mismo split.
+
+    Salvo cuando el nombre ya la dice: «Instalación · Instalación de split
+    muro 18.000» repite la palabra y empuja lo que importa fuera del ancho
+    del selector.
+  */
   const opcionesServicio: [string, string][] = [
     ['', 'Escribir a mano'],
-    ...(servicios.datos ?? []).map(s => [s.id, `${CATEGORIAS[s.categoria]} · ${s.nombre}`] as [string, string]),
+    ...(servicios.datos ?? []).map(s => {
+      const categoria = CATEGORIAS[s.categoria]
+      const primera = categoria.split(' ')[0]
+      return [
+        s.id,
+        s.nombre.startsWith(primera) ? s.nombre : `${categoria} · ${s.nombre}`,
+      ] as [string, string]
+    }),
   ]
 
   return (
