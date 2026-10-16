@@ -126,8 +126,11 @@ export function RegistroRapido({
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-medium">{r.etiqueta}</span>
                 <span className="block text-xs text-faint">
+                  {/* Sin cambio de estado, el botón dice el que ya tenía: un
+                      local que estaba «interesado» y hoy está cerrado sigue
+                      interesado, no vuelve a «por visitar». */}
                   {r.estado === null
-                    ? 'Sigue por visitar'
+                    ? `Sigue como «${pinta.corta.toLowerCase()}»`
                     : `Queda como «${pinta.corta.toLowerCase()}»`}
                   {r.volverEnDias ? ` · volver en ${r.volverEnDias} días` : ''}
                 </span>

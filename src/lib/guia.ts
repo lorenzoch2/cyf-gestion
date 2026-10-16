@@ -90,7 +90,7 @@ export const GUIA: SeccionGuia[] = [
           {
             titulo: 'Local cerrado',
             texto:
-              'Queda constancia de que se pasó, pero sigue por visitar. Vuelve en dos días, a otra hora.',
+              'Queda constancia de que se pasó, pero el estado no cambia: el local sigue como estaba y vuelve en dos días, a otra hora.',
           },
           {
             titulo: 'No corresponde',
