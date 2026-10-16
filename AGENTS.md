@@ -96,10 +96,15 @@ src/
 - **Las variables de Vite se leen al compilar.** Cambiar `.env.local` exige reiniciar `npm run dev`;
   en Netlify, volver a desplegar.
 - **El tarifario existe en dos lados**: la tabla `servicios` y el documento
-  `04 Comercial/Tarifario/Tarifario de servicios 2026.md` en la carpeta de la empresa. El documento
+  `_Fuentes/04 Comercial/Tarifario/Tarifario de servicios 2026.md` en la carpeta de la empresa. El documento
   es el oficial; si cambia un precio, cambia en los dos.
 - **La numeración de presupuestos** (`AAAA-NNN`) es la misma de la empresa. Antes de usar un número
-  nuevo, revisar que no choque con `04 Comercial/Presupuestos/_Registro de presupuestos.md`.
+  nuevo, revisar que no choque con `_Fuentes/04 Comercial/Presupuestos/_Registro de presupuestos.md`.
+- **Los documentos de la carpeta de la empresa se escriben en markdown y se leen en PDF.** La
+  fuente vive en `_Fuentes/<misma ruta>.md` y el PDF que se abre queda en la ruta sin `_Fuentes`.
+  Para cambiar uno se edita el markdown y se vuelve a componer con
+  `_Herramientas/Componer documentos/componer-documentos.py`; escribir un `.md` suelto en el
+  directorio lo deja fuera de esa rutina.
 - Los prospectos vienen de OpenStreetMap con licencia ODbL: si alguna vez se publican, hay que
   atribuir la fuente.
 
