@@ -29,9 +29,20 @@ const LATON: [number, number, number] = [138, 103, 48]
 const LINEA: [number, number, number] = [221, 227, 234]
 const TINTE: [number, number, number] = [238, 241, 246]
 
+/*
+  Las mismas que imprime el generador de la carpeta de la empresa. Si cambian
+  allá, cambian acá: un presupuesto hecho en el teléfono y otro hecho en el
+  computador no pueden prometer cosas distintas.
+
+  La del precio de los equipos no es un formalismo. Las listas de proveedor
+  vencen en días o semanas y a veces se cotiza con la última que hay, ya
+  vencida, porque es la única. Decirlo por escrito es lo que permite recotizar
+  al contratar sin que el cliente lo sienta un cambio de trato.
+*/
 const CONDICIONES = [
   'Valores netos: se agrega IVA del 19%.',
   'Validez de la oferta: 15 días corridos.',
+  'Los precios de equipo son referenciales y están sujetos a cambio: salen de listas de proveedor que vencen en días o semanas, y se confirman al momento de contratar.',
   'Forma de pago: 50% al contratar y 50% contra entrega del informe de cierre.',
   'Garantía de 30 días sobre la mano de obra ejecutada.',
   'Repuestos, refrigerante y materiales se cotizan aparte.',
