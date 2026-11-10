@@ -22,9 +22,9 @@ acceso total. No es el sitio público (ese es el repo `caloryfrioindustrial`).
 ```
 supabase/
   schema.sql            # tablas, índices, triggers y políticas RLS
-  seed-servicios.sql    # tarifario
-  seed-prospectos.sql   # los 333 locales de la campaña (OpenStreetMap, ODbL)
   migracion-02-*.sql    # estados de gestión, rutas y tarifarios por zona o cliente
+  datos-ejemplo/        # la forma de cada carga inicial, con datos inventados
+  datos/                # las cargas reales — ignorado por git, ver más abajo
 src/
   lib/
     supabase.ts         # el cliente; null si faltan las variables
@@ -111,7 +111,7 @@ src/
 ## Inventario y dotación
 
 - **El catálogo se genera, no se escribe a mano.** `herramientas/catalogo.py` es la fuente de los
-  153 ítems: de ahí salen `supabase/seed-dotacion.sql` y la hoja imprimible que vive en la carpeta
+  153 ítems: de ahí salen `supabase/datos/seed-dotacion.sql` y la hoja imprimible que vive en la carpeta
   de la empresa. Editar el catálogo es editar ese script y volver a correrlo.
 - **Cada ítem tiene un ámbito.** `T` se repite por técnico, `E` es de la empresa y `V` vive en la
   camioneta. Sin esa distinción la pregunta «¿tienen los dos lo mismo?» no se puede responder, que

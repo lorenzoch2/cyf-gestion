@@ -7,8 +7,9 @@
 --
 --  Orden de ejecución:
 --    1. este archivo            → tablas y permisos
---    2. seed-servicios.sql      → el tarifario
---    3. seed-prospectos.sql     → los 333 locales de la campaña
+--    2. migracion-*.sql         → en orden, de la 02 a la 10
+--    3. datos/                  → las cargas iniciales, fuera del repositorio
+--                                 (su forma está en datos-ejemplo/)
 -- ════════════════════════════════════════════════════════════════════════════
 
 create extension if not exists pgcrypto;

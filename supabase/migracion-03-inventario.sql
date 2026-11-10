@@ -4,7 +4,7 @@
 --  Se pega completo en el editor SQL de Supabase y se ejecuta una vez. Se
 --  puede volver a ejecutar sin romper nada.
 --
---  Después de este archivo va seed-dotacion.sql, que trae el catálogo de los
+--  Después de este archivo va datos/seed-dotacion.sql, que trae el catálogo de los
 --  153 ítems y lo que ya había en el inventario de junio de 2026.
 -- ════════════════════════════════════════════════════════════════════════════
 

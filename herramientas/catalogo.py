@@ -462,7 +462,9 @@ def escribir_hoja(filas, destino):
 def main():
     raiz = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     filas = construir()
-    sql = os.path.join(raiz, "supabase", "seed-dotacion.sql")
+    #  La salida va a `supabase/datos/`, que no está en el control de versiones:
+    #  es el inventario real de la empresa.
+    sql = os.path.join(raiz, "supabase", "datos", "seed-dotacion.sql")
     hoja = os.path.join(raiz, "herramientas", "Dotacion.md")
     escribir_sql(filas, sql)
     escribir_hoja(filas, hoja)

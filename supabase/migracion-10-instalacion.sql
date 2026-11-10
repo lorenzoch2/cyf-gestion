@@ -9,7 +9,7 @@
 --  Esta migración abre la categoría y carga los precios.
 --
 --  Espeja `_Fuentes/04 Comercial/Tarifario/…2026.md`, sección 7,
---  igual que `seed-servicios.sql`: si cambia un precio, cambia en los tres.
+--  igual que `datos/seed-servicios.sql`: si cambia un precio, cambia en los tres.
 -- ════════════════════════════════════════════════════════════════════════════
 
 -- ─── La categoría nueva ─────────────────────────────────────────────────────

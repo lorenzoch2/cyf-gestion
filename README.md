@@ -32,9 +32,12 @@ npm run dev
 En el panel de Supabase, **SQL Editor**, ejecutar en este orden:
 
 1. `supabase/schema.sql` — tablas, índices y permisos
-2. `supabase/seed-servicios.sql` — el tarifario
-3. `supabase/seed-prospectos.sql` — los 333 locales de la campaña
-4. `supabase/migracion-02-flexibilidad.sql` — estados de gestión, rutas y tarifarios múltiples
+2. `supabase/migracion-*.sql` — en orden, de la 02 a la 10
+3. Las cargas iniciales de `supabase/datos/`
+
+Las cargas iniciales **no están en el repositorio**: traen prospectos, tarifario, proveedores y
+personas, que son datos de la empresa y de terceros. En `supabase/datos-ejemplo/` está la misma
+forma con datos inventados, que sirve para levantar el sistema desde cero.
 
 Las cuentas se crean a mano en **Authentication → Users**. No hay registro abierto: son dos
 personas y cada una entra con su correo.
