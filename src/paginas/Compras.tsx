@@ -11,8 +11,8 @@ import { ESTADOS_ORDEN, type OrdenCompra, type Proveedor } from '../lib/tipos'
 /*
   Las órdenes de compra que la empresa emite.
 
-  No confundir con las que un cliente le emite a la empresa —como la de un cliente
-  de mayo de 2026—: esas son venta y viven en el lado comercial.
+  No confundir con las que un cliente le emite a la empresa: esas son venta y
+  viven en el lado comercial.
 */
 export function Compras() {
   const navegar = useNavigate()

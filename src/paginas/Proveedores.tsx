@@ -11,7 +11,7 @@ import type { Proveedor } from '../lib/tipos'
   Los proveedores.
 
   Lo que no es obvio y por eso tiene campo propio: cuántos días dura una
-  cotización suya. un distribuidor cotiza a tres días corridos, y un presupuesto al
+  cotización suya. Hay distribuidores que cotizan a tres días corridos, y un presupuesto al
   cliente con 30 días de validez apoyado en ese precio es una pérdida esperando
   ocurrir. La app lo recuerda para que no haya que acordarse.
 */
@@ -203,7 +203,7 @@ function FichaProveedor({
           inputMode="numeric"
           value={campos.validez}
           onChange={cambiar('validez')}
-          pista="un distribuidor cotiza a tres días. Con esto la app avisa cuando un precio venció."
+          pista="Hay quien cotiza a tres días. Con esto la app avisa cuando un precio venció."
         />
         <Area etiqueta="Nota" value={campos.nota} onChange={cambiar('nota')} />
 

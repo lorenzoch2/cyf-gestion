@@ -156,10 +156,9 @@ otra. Lo único que hay que agregar en Netlify es `SUPABASE_SECRET_KEY` (Project
 ## Compras
 
 - **Las órdenes de compra son las que la empresa emite a un proveedor.** No confundir con las que
-  un cliente le emite a la empresa —como la de un cliente de mayo de 2026, que está en
-  `04 Comercial/Órdenes de Compra` de la carpeta—: esas son venta.
-- **Un proveedor declara cuántos días dura su cotización** (`validez_dias`). un distribuidor cotiza a tres
-  días corridos y su lista de precios dura una semana. Al guardar una cotización la app calcula el
+  un cliente le emite a la empresa: esas son venta y viven en el lado comercial.
+- **Un proveedor declara cuántos días dura su cotización** (`validez_dias`). Hay distribuidores
+  que cotizan a tres días corridos y cuya lista de precios dura una semana. Al guardar una cotización la app calcula el
   vencimiento sola y después marca en naranja el precio muerto. Cotizarle al cliente con 30 días de
   validez apoyado en un precio de tres es una pérdida esperando ocurrir, y era un problema real.
 - **«Traer lo que falta» es donde el inventario y las compras se tocan.** Toma los ítems en «falta»

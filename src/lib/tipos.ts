@@ -447,7 +447,7 @@ export interface Proveedor {
   comuna: string | null
   web: string | null
   condiciones: string | null
-  /** Cuánto dura una cotización suya. un distribuidor: tres días corridos. */
+  /** Cuánto dura una cotización suya. Hay quien cotiza a tres días corridos. */
   validez_dias: number | null
   nota: string | null
   activo: boolean
