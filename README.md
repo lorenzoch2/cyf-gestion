@@ -1,7 +1,14 @@
 # CyF Gestión
 
-Aplicación interna de **Calor y Frío Industrial SpA**: prospectos, clientes, negocios, pendientes,
-tarifario y presupuestos. Pensada para el teléfono, en la calle, con una mano.
+Aplicación de gestión de **Calor y Frío Industrial SpA**: prospectos, clientes, negocios,
+pendientes, tarifario, inventario, mantenciones programadas, informes técnicos y caja. Pensada
+para el teléfono, en la calle, con una mano.
+
+Está en producción y se usa a diario en terreno. El repositorio es público para que el código
+pueda revisarse; **los datos de la empresa y de terceros no están en él** —ver *Base de datos*—.
+
+El recorrido de una jornada de operación, paso a paso, está en
+**[lorenzoch2.github.io](https://lorenzoch2.github.io/)**.
 
 No es el sitio público — ese vive en
 [`caloryfrioindustrial`](https://github.com/lorenzoch2/caloryfrioindustrial).
@@ -57,3 +64,9 @@ Netlify toma `netlify.toml` tal cual. Las dos variables de entorno
   personas en un teléfono y una consulta directa es más fácil de seguir que un caché que invalidar.
 - La seguridad está en la base, no en la app: las políticas RLS de `supabase/schema.sql` exigen
   sesión iniciada para leer o escribir cualquier tabla.
+
+## Uso del código
+
+El código se publica para que pueda leerse y revisarse. No lleva una licencia de software libre:
+los derechos quedan reservados, y usarlo o derivarlo requiere autorización. Si algo de acá te
+sirve, escribe.
